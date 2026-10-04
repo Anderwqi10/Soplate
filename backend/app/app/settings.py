@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     # Propias
     'core',
+    'ledger',
 ]
 
 MIDDLEWARE = [
