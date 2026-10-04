@@ -10,4 +10,5 @@ urlpatterns = [
     path("api/auth/token/refresh/", TokenRefreshView.as_view()),
     path("api/me/", me),
     path("api/", include("ledger.urls")),
+    path("api/", include("loans.urls")),
 ]
