@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'core',
     'ledger',
     'loans',
+    'reports',
 ]
 
 MIDDLEWARE = [

@@ -1,7 +1,3 @@
-from decimal import Decimal
-
-from django.db.models import DecimalField, Sum, Value
-from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -12,19 +8,12 @@ from loans.domain import build_schedule
 from loans.models import Borrower, Loan
 from loans.serializers import (BorrowerSerializer, LoanInputSerializer, LoanPreviewInputSerializer,
                                PaymentInputSerializer, loan_detail, loan_list_item, payment_data, schedule_data)
-from loans.services import create_loan, register_payment, summarize_loan
+from loans.services import create_loan, loans_with_totals, register_payment, summarize_loan
 
 
 class BorrowerViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
     queryset = Borrower.objects.all()
     serializer_class = BorrowerSerializer
-
-
-def loans_with_totals():
-    """Préstamos con lo necesario para resumirlos en pocas consultas (sin N+1)."""
-    zero = Value(Decimal("0"), output_field=DecimalField(max_digits=14, decimal_places=2))
-    return (Loan.objects.select_related("borrower", "account").prefetch_related("installments")
-            .annotate(paid_total=Coalesce(Sum("payments__amount"), zero)))
 
 
 class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):

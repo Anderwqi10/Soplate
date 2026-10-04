@@ -3,7 +3,8 @@ from datetime import date as Date
 from decimal import Decimal
 
 from django.db import transaction as db_transaction
-from django.db.models import Sum
+from django.db.models import DecimalField, Sum, Value
+from django.db.models.functions import Coalesce
 
 from core.exceptions import BusinessError
 from core.money import q2
@@ -29,6 +30,13 @@ class LoanSummary:
     installments: list[InstallmentState]
 
 
+def loans_with_totals():
+    """Préstamos con lo necesario para resumirlos en pocas consultas (sin N+1)."""
+    zero = Value(Decimal("0"), output_field=DecimalField(max_digits=14, decimal_places=2))
+    return (Loan.objects.select_related("borrower", "account").prefetch_related("installments")
+            .annotate(paid_total=Coalesce(Sum("payments__amount"), zero)))
+
+
 def _paid_total(loan: Loan) -> Decimal:
     # Si la consulta ya trajo la suma (annotate), se reutiliza y se evita otra consulta.
     paid = getattr(loan, "paid_total", None)
@@ -48,9 +56,9 @@ def summarize_loan(loan: Loan, today: Date) -> LoanSummary:
         installment_amount=states[0].amount,
         paid_total=paid,
         outstanding=total - paid,
-        # Parte de capital de lo que falta: cada cuota aporta su proporción capital/valor.
-        outstanding_principal=sum((q2(s.remaining * s.principal_amount / s.amount) for s in states),
-                                  Decimal("0.00")),
+        # Parte de capital de lo que falta, con la proporción capital/total del préstamo completo
+        # (redondear cuota por cuota acumulaba centavos de error).
+        outstanding_principal=q2((total - paid) * sum(s.principal_amount for s in states) / total),
         end_date=states[-1].due_date,
         status=loan_status(states, today),
         days_overdue=days_overdue(states, today),

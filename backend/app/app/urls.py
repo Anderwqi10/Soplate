@@ -11,4 +11,5 @@ urlpatterns = [
     path("api/me/", me),
     path("api/", include("ledger.urls")),
     path("api/", include("loans.urls")),
+    path("api/", include("reports.urls")),
 ]
