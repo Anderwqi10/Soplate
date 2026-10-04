@@ -5,6 +5,8 @@ import Layout from "./components/Layout";
 import AccountDetailPage from "./features/accounts/AccountDetailPage";
 import AccountsPage from "./features/accounts/AccountsPage";
 import BorrowersPage from "./features/borrowers/BorrowersPage";
+import LoanDetailPage from "./features/loans/LoanDetailPage";
+import LoanForm from "./features/loans/LoanForm";
 import LoansPage from "./features/loans/LoansPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
@@ -24,8 +26,8 @@ export default function App() {
         <Route path="accounts/:id" element={<AccountDetailPage />} />
         <Route path="borrowers" element={<BorrowersPage />} />
         <Route path="loans" element={<LoansPage />} />
-        <Route path="loans/new" element={<PlaceholderPage title="Nuevo préstamo" />} />
-        <Route path="loans/:id" element={<PlaceholderPage title="Préstamo" />} />
+        <Route path="loans/new" element={<LoanForm />} />
+        <Route path="loans/:id" element={<LoanDetailPage />} />
         <Route path="projection" element={<PlaceholderPage title="Proyección" />} />
       </Route>
     </Routes>
