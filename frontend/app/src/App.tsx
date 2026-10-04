@@ -1,0 +1,29 @@
+import { Route, Routes } from "react-router";
+import LoginPage from "./auth/LoginPage";
+import RequireAuth from "./auth/RequireAuth";
+import Layout from "./components/Layout";
+import PlaceholderPage from "./pages/PlaceholderPage";
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        element={
+          <RequireAuth>
+            <Layout />
+          </RequireAuth>
+        }
+      >
+        <Route index element={<PlaceholderPage title="Resumen" />} />
+        <Route path="accounts" element={<PlaceholderPage title="Cuentas" />} />
+        <Route path="accounts/:id" element={<PlaceholderPage title="Cuenta" />} />
+        <Route path="borrowers" element={<PlaceholderPage title="Deudores" />} />
+        <Route path="loans" element={<PlaceholderPage title="Préstamos" />} />
+        <Route path="loans/new" element={<PlaceholderPage title="Nuevo préstamo" />} />
+        <Route path="loans/:id" element={<PlaceholderPage title="Préstamo" />} />
+        <Route path="projection" element={<PlaceholderPage title="Proyección" />} />
+      </Route>
+    </Routes>
+  );
+}
