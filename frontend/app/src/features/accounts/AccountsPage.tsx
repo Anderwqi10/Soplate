@@ -75,7 +75,8 @@ export default function AccountsPage() {
 
       {open && (
         <div className="mb-8">
-          <Panel title={PANEL_TITLE[open]} onClose={close}>
+          {/* key: al cambiar de formulario se monta un panel nuevo y el foco entra al primer campo */}
+          <Panel key={open} title={PANEL_TITLE[open]} onClose={close}>
             {open === "account" && <AccountForm onDone={close} />}
             {open === "transaction" && <TransactionForm onDone={close} />}
             {open === "transfer" && <TransferForm onDone={close} />}

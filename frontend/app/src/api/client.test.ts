@@ -73,3 +73,33 @@ test("login with wrong credentials gives a clear message", async () => {
   fetchMock.mockResolvedValueOnce(json(401, { detail: "No active account" }));
   await expect(login("ana", "mala")).rejects.toThrow("Usuario o contraseña incorrectos");
 });
+
+test("a server error page (HTML) becomes a clear ApiError, not a network error", async () => {
+  tokenStore.set("A1", "R1");
+  fetchMock.mockResolvedValueOnce(new Response("<html>Server Error</html>", { status: 500 }));
+  const error = await apiFetch<never>("/loans/").catch((e: unknown) => e);
+  expect(error).toBeInstanceOf(ApiError);
+  expect((error as ApiError).message).toBe("El servidor tuvo un error (500). Intenta de nuevo.");
+});
+
+test("concurrent 401s share a single refresh", async () => {
+  tokenStore.set("A1", "R1");
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+    if (String(url).endsWith("/auth/token/refresh/")) return json(200, { access: "A2" });
+    const auth = new Headers(init.headers).get("Authorization");
+    return auth === "Bearer A2" ? json(200, { ok: true }) : json(401);
+  });
+  await Promise.all([apiFetch("/accounts/"), apiFetch("/reports/dashboard/")]);
+  const refreshCalls = fetchMock.mock.calls.filter(([url]) => String(url).endsWith("/auth/token/refresh/"));
+  expect(refreshCalls).toHaveLength(1);
+});
+
+test("a rotated refresh token is stored", async () => {
+  tokenStore.set("A1", "R1");
+  fetchMock
+    .mockResolvedValueOnce(json(401))
+    .mockResolvedValueOnce(json(200, { access: "A2", refresh: "R2" }))
+    .mockResolvedValueOnce(json(200, {}));
+  await apiFetch("/me/");
+  expect(tokenStore.get()).toEqual({ access: "A2", refresh: "R2" });
+});

@@ -8,5 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "src/test/setup.ts",
     globals: true,
+    // Fechas probadas en la zona de los usuarios: así el test detecta desfases de un día por UTC.
+    env: { TZ: "America/Bogota" },
   },
 });

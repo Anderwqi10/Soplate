@@ -1,13 +1,13 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
+import { createQueryClient } from "./api/queryClient";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import "./index.css";
 
-// Un 400 (regla de negocio) no mejora reintentando; solo se reintentan fallas de red una vez.
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } });
+const queryClient = createQueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

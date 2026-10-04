@@ -73,3 +73,11 @@ test("new account form posts the typed values", async () => {
     body: { name: "Nequi", kind: "WALLET", initial_balance: "250000" },
   });
 });
+
+test("switching forms moves focus into the new form", async () => {
+  mockApi([account({ id: 1, name: "Bancolombia" })]);
+  renderWithProviders(<AccountsPage />);
+  await userEvent.click(await screen.findByRole("button", { name: "Movimiento" }));
+  await userEvent.click(screen.getByRole("button", { name: "Transferir" }));
+  expect(screen.getByLabelText("Desde")).toHaveFocus();
+});

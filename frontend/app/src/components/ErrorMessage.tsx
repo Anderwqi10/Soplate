@@ -13,9 +13,12 @@ export default function ErrorMessage({ error }: { error: unknown }) {
   if (!error) return null;
   const isApi = error instanceof ApiError;
   const fields = isApi ? fieldErrors(error.data) : [];
+  // fetch lanza TypeError solo cuando no hay conexión; cualquier otro error no es culpa de la red.
   const message = isApi
     ? fields.length > 0 ? "Revisa los datos marcados." : error.message
-    : "No se pudo conectar con el servidor. Revisa que el backend esté encendido.";
+    : error instanceof TypeError
+      ? "No se pudo conectar con el servidor. Revisa que el backend esté encendido."
+      : "Algo salió mal. Recarga la página e intenta de nuevo.";
 
   return (
     <div role="alert" className="border-l-4 border-red bg-sheet px-4 py-3 text-sm text-red">

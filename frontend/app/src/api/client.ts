@@ -67,7 +67,13 @@ function buildUrl(path: string, query?: Query) {
 async function parse(response: Response): Promise<unknown> {
   if (response.status === 204) return undefined;
   const text = await response.text();
-  return text ? JSON.parse(text) : undefined;
+  if (!text) return undefined;
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Un error 500 de Django llega como página HTML: no es una falla de conexión.
+    return { detail: `El servidor tuvo un error (${response.status}). Intenta de nuevo.` };
+  }
 }
 
 function send(path: string, options: FetchOptions, access: string | null) {
@@ -81,7 +87,7 @@ function send(path: string, options: FetchOptions, access: string | null) {
   });
 }
 
-async function refreshAccess(): Promise<string | null> {
+async function requestNewAccess(): Promise<string | null> {
   const { refresh } = tokenStore.get();
   if (!refresh) return null;
   const response = await fetch(buildUrl("/auth/token/refresh/"), {
@@ -90,9 +96,20 @@ async function refreshAccess(): Promise<string | null> {
     body: JSON.stringify({ refresh }),
   });
   if (!response.ok) return null;
-  const { access } = (await response.json()) as { access: string };
-  tokenStore.set(access);
+  // Si el backend rota el token de renovación, llega uno nuevo y hay que guardarlo.
+  const { access, refresh: rotated } = (await response.json()) as { access: string; refresh?: string };
+  tokenStore.set(access, rotated);
   return access;
+}
+
+// Si varias peticiones vencen a la vez, todas esperan la misma renovación en lugar de pedir una cada una.
+let refreshing: Promise<string | null> | null = null;
+
+function refreshAccess(): Promise<string | null> {
+  refreshing ??= requestNewAccess().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
 }
 
 /** Llama a la API con el token. Si expiró, lo renueva una vez y reintenta; si no se puede, cierra sesión. */
