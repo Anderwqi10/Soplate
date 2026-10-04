@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../../api/client";
 import type { Account, AccountInput, Transaction, TransactionInput, TransferInput } from "../../api/types";
+import { useMoneyMutation } from "../../api/useMoneyMutation";
 
 export interface TransactionFilters {
   account?: number;
@@ -21,20 +22,6 @@ export function useTransactions(filters: TransactionFilters) {
   return useQuery({
     queryKey: ["transactions", filters],
     queryFn: () => apiFetch<Transaction[]>("/transactions/", { query: { ...filters } }),
-  });
-}
-
-/** Cualquier movimiento de dinero cambia saldos, historial y el resumen: se refrescan los tres. */
-function useMoneyMutation<TInput, TResult>(send: (input: TInput) => Promise<TResult>) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: send,
-    onSuccess: () =>
-      Promise.all(
-        [["accounts"], ["transactions"], ["dashboard"], ["projection"]].map((queryKey) =>
-          queryClient.invalidateQueries({ queryKey }),
-        ),
-      ),
   });
 }
 
