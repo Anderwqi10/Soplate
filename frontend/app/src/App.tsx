@@ -5,10 +5,11 @@ import Layout from "./components/Layout";
 import AccountDetailPage from "./features/accounts/AccountDetailPage";
 import AccountsPage from "./features/accounts/AccountsPage";
 import BorrowersPage from "./features/borrowers/BorrowersPage";
+import DashboardPage from "./features/dashboard/DashboardPage";
 import LoanDetailPage from "./features/loans/LoanDetailPage";
 import LoanForm from "./features/loans/LoanForm";
 import LoansPage from "./features/loans/LoansPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
+import ProjectionPage from "./features/projection/ProjectionPage";
 
 export default function App() {
   return (
@@ -21,14 +22,14 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route index element={<PlaceholderPage title="Resumen" />} />
+        <Route index element={<DashboardPage />} />
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="accounts/:id" element={<AccountDetailPage />} />
         <Route path="borrowers" element={<BorrowersPage />} />
         <Route path="loans" element={<LoansPage />} />
         <Route path="loans/new" element={<LoanForm />} />
         <Route path="loans/:id" element={<LoanDetailPage />} />
-        <Route path="projection" element={<PlaceholderPage title="Proyección" />} />
+        <Route path="projection" element={<ProjectionPage />} />
       </Route>
     </Routes>
   );

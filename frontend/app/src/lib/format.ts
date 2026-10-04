@@ -26,8 +26,18 @@ export function formatDate(iso: ISODate): string {
   return shortDate.format(parseISODate(iso)).replace(/\./g, "");
 }
 
-export function todayISO(): ISODate {
-  const now = new Date();
+function toISODate(date: Date): ISODate {
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function todayISO(): ISODate {
+  return toISODate(new Date());
+}
+
+/** Suma (o resta) días a una fecha "AAAA-MM-DD", cruzando meses y años. */
+export function addDaysISO(iso: ISODate, days: number): ISODate {
+  const date = parseISODate(iso);
+  date.setDate(date.getDate() + days);
+  return toISODate(date);
 }
