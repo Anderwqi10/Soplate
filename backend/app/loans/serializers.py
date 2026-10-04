@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from core.money import money_str
 from ledger.serializers import POSITIVE, OwnedAccountField
-from loans.domain import Frequency, InterestMode, ScheduledInstallment
+from loans.domain import Frequency, InterestMode, LoanStatus, ScheduledInstallment
 from loans.models import Borrower, Loan, Payment
 from loans.services import LoanSummary
 
@@ -43,6 +43,11 @@ class PaymentInputSerializer(serializers.Serializer):
     date = serializers.DateField()
     account = OwnedAccountField(required=False, allow_null=True, default=None)
     note = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
+
+
+class LoanFilterSerializer(serializers.Serializer):
+    borrower = serializers.IntegerField(required=False)
+    status = serializers.ChoiceField(choices=LoanStatus.choices, required=False)
 
 
 # --- Salida (se arma desde LoanSummary, porque estado y saldos no son columnas) ---

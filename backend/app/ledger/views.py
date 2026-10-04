@@ -4,21 +4,14 @@ from rest_framework.response import Response
 
 from core.views import OwnedQuerysetMixin
 from ledger.models import Account, Transaction
-from ledger.serializers import (AccountSerializer, TransactionInputSerializer, TransactionSerializer,
-                                TransferInputSerializer)
+from ledger.serializers import (AccountSerializer, TransactionFilterSerializer, TransactionInputSerializer,
+                                TransactionSerializer, TransferInputSerializer)
 from ledger.services import record_transaction, transfer
 
 
 class AccountViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
     queryset = Account.objects.with_balance()
     serializer_class = AccountSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    def get_object(self):
-        # Re-leer con el saldo anotado después de crear/editar.
-        return super().get_object()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -36,15 +29,20 @@ class TransactionViewSet(OwnedQuerysetMixin, mixins.ListModelMixin, mixins.Creat
 
     def get_queryset(self):
         qs = super().get_queryset()
-        params = self.request.query_params
-        if params.get("account"):
-            qs = qs.filter(account_id=params["account"])
-        if params.get("kind"):
-            qs = qs.filter(kind=params["kind"])
-        if params.get("date_from"):
-            qs = qs.filter(date__gte=params["date_from"])
-        if params.get("date_to"):
-            qs = qs.filter(date__lte=params["date_to"])
+        if self.action != "list":
+            return qs
+        # Parámetros vacíos se ignoran; inválidos ("abc", "2026-13-01") responden 400.
+        filters = TransactionFilterSerializer(data={k: v for k, v in self.request.query_params.items() if v != ""})
+        filters.is_valid(raise_exception=True)
+        f = filters.validated_data
+        if "account" in f:
+            qs = qs.filter(account_id=f["account"])
+        if "kind" in f:
+            qs = qs.filter(kind=f["kind"])
+        if "date_from" in f:
+            qs = qs.filter(date__gte=f["date_from"])
+        if "date_to" in f:
+            qs = qs.filter(date__lte=f["date_to"])
         return qs
 
     def create(self, request, *args, **kwargs):

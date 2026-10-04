@@ -15,11 +15,17 @@ def account_balance(account: Account) -> Decimal:
     return q2(account.initial_balance + moves)
 
 
+@db_transaction.atomic
 def record_transaction(*, owner, account: Account, kind: str, amount: Decimal, date: Date,
                        description: str = "", transfer_group=None, loan=None) -> Transaction:
     """Registra un movimiento. `amount` llega positivo; el signo lo pone el tipo."""
     if account.owner_id != owner.id:
         raise BusinessError("La cuenta no existe.")
+    # Bloquea la fila de la cuenta hasta terminar: dos retiros simultáneos no pueden
+    # pasar ambos la verificación de saldo.
+    account = Account.objects.select_for_update().get(pk=account.pk)
+    if not account.is_active:
+        raise BusinessError(f"La cuenta {account.name} está archivada.")
     amount = q2(amount)
     if amount <= 0:
         raise BusinessError("El monto debe ser mayor que cero.")

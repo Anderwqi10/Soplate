@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from core.views import OwnedQuerysetMixin
 from loans.domain import build_schedule
 from loans.models import Borrower, Loan
-from loans.serializers import (BorrowerSerializer, LoanInputSerializer, LoanPreviewInputSerializer,
+from loans.serializers import (BorrowerSerializer, LoanFilterSerializer, LoanInputSerializer,
+                               LoanPreviewInputSerializer,
                                PaymentInputSerializer, loan_detail, loan_list_item, payment_data, schedule_data)
 from loans.services import create_loan, loans_with_totals, register_payment, summarize_loan
 
@@ -26,11 +27,13 @@ class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):
 
     def list(self, request):
         today = timezone.localdate()
+        filters = LoanFilterSerializer(data={k: v for k, v in request.query_params.items() if v != ""})
+        filters.is_valid(raise_exception=True)
         qs = self.get_queryset()
-        if request.query_params.get("borrower"):
-            qs = qs.filter(borrower_id=request.query_params["borrower"])
+        if "borrower" in filters.validated_data:
+            qs = qs.filter(borrower_id=filters.validated_data["borrower"])
         items = [loan_list_item(loan, summarize_loan(loan, today)) for loan in qs]
-        wanted = request.query_params.get("status")
+        wanted = filters.validated_data.get("status")
         if wanted:
             # El estado depende de la fecha de hoy, por eso se filtra después de calcularlo.
             items = [i for i in items if i["status"] == wanted]

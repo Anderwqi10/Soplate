@@ -133,7 +133,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Django REST Framework: JWT por defecto, todo requiere login, sin paginación.
+# Django REST Framework: JWT por defecto, todo requiere login, sin paginaciÃ³n.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',

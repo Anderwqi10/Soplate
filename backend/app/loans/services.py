@@ -99,6 +99,8 @@ def register_payment(*, owner, loan: Loan, amount: Decimal, date: Date, account:
     """Registra dinero recibido: movimiento de entrada en la cuenta + pago del préstamo."""
     if loan.owner_id != owner.id:
         raise BusinessError("El préstamo no existe.")
+    # Bloquea el préstamo: dos pagos simultáneos (p. ej. doble clic) no pueden superar el saldo.
+    loan = Loan.objects.select_for_update().get(pk=loan.pk)
     account = account or loan.account
     amount = q2(amount)
     if date < loan.start_date:
