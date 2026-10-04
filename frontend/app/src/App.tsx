@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router";
 import LoginPage from "./auth/LoginPage";
 import RequireAuth from "./auth/RequireAuth";
 import Layout from "./components/Layout";
+import AccountDetailPage from "./features/accounts/AccountDetailPage";
+import AccountsPage from "./features/accounts/AccountsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 export default function App() {
@@ -16,8 +18,8 @@ export default function App() {
         }
       >
         <Route index element={<PlaceholderPage title="Resumen" />} />
-        <Route path="accounts" element={<PlaceholderPage title="Cuentas" />} />
-        <Route path="accounts/:id" element={<PlaceholderPage title="Cuenta" />} />
+        <Route path="accounts" element={<AccountsPage />} />
+        <Route path="accounts/:id" element={<AccountDetailPage />} />
         <Route path="borrowers" element={<PlaceholderPage title="Deudores" />} />
         <Route path="loans" element={<PlaceholderPage title="Préstamos" />} />
         <Route path="loans/new" element={<PlaceholderPage title="Nuevo préstamo" />} />

@@ -20,7 +20,9 @@ function renderLogin() {
   );
 }
 
-beforeEach(() => vi.mocked(client.login).mockReset());
+beforeEach(() => {
+  vi.mocked(client.login).mockReset();
+});
 
 test("submits credentials and goes to dashboard", async () => {
   vi.mocked(client.login).mockResolvedValueOnce(undefined);
