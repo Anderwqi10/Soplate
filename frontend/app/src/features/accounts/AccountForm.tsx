@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { AccountKind } from "../../api/types";
 import ErrorMessage from "../../components/ErrorMessage";
+import { normalizeAmount } from "../../lib/amount";
 import { ACCOUNT_KIND_LABEL } from "../../lib/status";
 import { useCreateAccount } from "./api";
 
@@ -12,7 +13,7 @@ export default function AccountForm({ onDone }: { onDone(): void }) {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    create.mutate({ name: name.trim(), kind, initial_balance: initialBalance.trim() || "0" }, { onSuccess: onDone });
+    create.mutate({ name: name.trim(), kind, initial_balance: normalizeAmount(initialBalance) ?? (initialBalance.trim() || "0") }, { onSuccess: onDone });
   }
 
   return (

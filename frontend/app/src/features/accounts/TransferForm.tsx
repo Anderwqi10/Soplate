@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import ErrorMessage from "../../components/ErrorMessage";
+import { normalizeAmount } from "../../lib/amount";
 import { todayISO } from "../../lib/format";
 import AccountSelect from "./AccountSelect";
 import { useCreateTransfer } from "./api";
@@ -16,7 +17,7 @@ export default function TransferForm({ onDone }: { onDone(): void }) {
     event.preventDefault();
     if (from === "" || to === "") return;
     transfer.mutate(
-      { from_account: from, to_account: to, amount: amount.trim(), date, description: description.trim() },
+      { from_account: from, to_account: to, amount: normalizeAmount(amount) ?? amount.trim(), date, description: description.trim() },
       { onSuccess: onDone },
     );
   }

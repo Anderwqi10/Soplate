@@ -1,18 +1,16 @@
 import type { ISODate, Money } from "../api/types";
 import { CURRENCY, LOCALE } from "../config";
 
-const money = new Intl.NumberFormat(LOCALE, {
-  style: "currency",
-  currency: CURRENCY,
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+// Sin centavos: "$ 400.000". Con centavos, siempre dos cifras: "$ 33,30" (no "$ 33,3").
+const wholeMoney = new Intl.NumberFormat(LOCALE, { style: "currency", currency: CURRENCY, maximumFractionDigits: 0 });
+const centsMoney = new Intl.NumberFormat(LOCALE, { style: "currency", currency: CURRENCY, minimumFractionDigits: 2 });
 
 const shortDate = new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short", year: "numeric" });
 
 /** "1200000.00" → "$ 1.200.000". Solo da formato: no hace cuentas con el dinero. */
 export function formatMoney(value: Money | number): string {
-  return money.format(Number(value));
+  const amount = Number(value);
+  return (Number.isInteger(amount) ? wholeMoney : centsMoney).format(amount);
 }
 
 /** Parsea "AAAA-MM-DD" como fecha local: `new Date("2026-02-28")` sería UTC y en Bogotá mostraría el 27. */

@@ -2,14 +2,21 @@ import { useState, type FormEvent } from "react";
 import type { LoanDetail } from "../../api/types";
 import ErrorMessage from "../../components/ErrorMessage";
 import { todayISO } from "../../lib/format";
+import { normalizeAmount } from "../../lib/amount";
 import AccountSelect from "../accounts/AccountSelect";
+import { useAccounts } from "../accounts/api";
 import { useCreatePayment } from "./api";
 
 export default function PaymentForm({ loan }: { loan: LoanDetail }) {
   const pay = useCreatePayment(loan.id);
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayISO());
-  const [account, setAccount] = useState<number | "">(loan.account);
+  const { data: accounts = [] } = useAccounts();
+  // Por defecto, la cuenta del préstamo; si fue archivada, se obliga a elegir otra
+  // (si no, la lista mostraría una cuenta y el formulario enviaría otra).
+  const loanAccountIsActive = accounts.some((a) => a.id === loan.account && a.is_active);
+  const [chosenAccount, setAccount] = useState<number | null>(null);
+  const account: number | "" = chosenAccount ?? (loanAccountIsActive ? loan.account : "");
   const [note, setNote] = useState("");
   const next = loan.installments.find((i) => i.status !== "PAID");
 
@@ -17,7 +24,7 @@ export default function PaymentForm({ loan }: { loan: LoanDetail }) {
     event.preventDefault();
     if (account === "") return;
     pay.mutate(
-      { amount: amount.trim(), date, account, note: note.trim() },
+      { amount: normalizeAmount(amount) ?? amount.trim(), date, account, note: note.trim() },
       {
         onSuccess: () => {
           setAmount("");

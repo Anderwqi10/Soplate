@@ -97,3 +97,23 @@ test("payment form hidden when loan is paid", async () => {
   expect(await screen.findByText("Este préstamo ya está pagado.")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Registrar pago" })).not.toBeInTheDocument();
 });
+
+test("if the loan's account was archived, the payment form makes you choose another", async () => {
+  const archived: Account = { ...accounts[0], id: 5, name: "Nequi vieja", is_active: false };
+  vi.mocked(client.apiFetch).mockImplementation(async (path: string) => {
+    if (path === "/loans/7/") return detail({ account: 5, account_name: "Nequi vieja" });
+    if (path === "/accounts/") return [...accounts, archived];
+    if (path === "/loans/7/payments/") return detail();
+    throw new Error(`ruta inesperada ${path}`);
+  });
+  renderDetail();
+  await screen.findAllByRole("option", { name: /Bancolombia/ });
+  expect(screen.getByLabelText("Cuenta donde entra")).toHaveValue("");
+  await userEvent.selectOptions(screen.getByLabelText("Cuenta donde entra"), "1");
+  await userEvent.click(screen.getByRole("button", { name: "Cuota" }));
+  await userEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
+  expect(client.apiFetch).toHaveBeenCalledWith("/loans/7/payments/", {
+    method: "POST",
+    body: { amount: "400000.00", date: todayISO(), account: 1, note: "" },
+  });
+});

@@ -19,3 +19,9 @@ test("addDaysISO crosses month and year boundaries", () => {
   expect(addDaysISO("2026-12-30", 3)).toBe("2027-01-02");
   expect(addDaysISO("2026-03-01", -1)).toBe("2026-02-28");
 });
+
+test("cents always show two digits when present", () => {
+  expect(n(formatMoney("33.30"))).toBe("$ 33,30");
+  expect(n(formatMoney("-5000.50"))).toBe("-$ 5.000,50");
+  expect(n(formatMoney("400000.00"))).toBe("$ 400.000");
+});

@@ -4,6 +4,7 @@ import type { Frequency, InterestMode, LoanPreviewInput } from "../../api/types"
 import EmptyState from "../../components/EmptyState";
 import ErrorMessage from "../../components/ErrorMessage";
 import PageHeader from "../../components/PageHeader";
+import { normalizeAmount } from "../../lib/amount";
 import { todayISO } from "../../lib/format";
 import { FREQUENCY_LABEL } from "../../lib/status";
 import AccountSelect from "../accounts/AccountSelect";
@@ -12,21 +13,35 @@ import { useBorrowers } from "../borrowers/api";
 import { useCreateLoan, usePreviewLoan } from "./api";
 import SchedulePreview from "./SchedulePreview";
 
-const AMOUNT = /^\d+(\.\d{1,2})?$/;
 const PREVIEW_DELAY_MS = 400;
 
-/** Arma la petición de vista previa solo si los datos están completos y son válidos. */
-function toPreviewInput(f: {
+interface Fields {
   principal: string; rate: string; mode: InterestMode; count: string; frequency: Frequency; start: string;
-}): LoanPreviewInput | null {
+}
+
+/**
+ * Valida los campos del cálculo. `input` existe solo si todo es válido;
+ * `errors` explica qué arreglar (los campos vacíos los marca el navegador con `required`).
+ */
+function validate(f: Fields): { input: LoanPreviewInput | null; errors: string[] } {
+  const errors: string[] = [];
+  const principal = normalizeAmount(f.principal);
+  const rate = normalizeAmount(f.rate);
   const count = Number(f.count);
-  if (!AMOUNT.test(f.principal) || Number(f.principal) <= 0) return null;
-  if (!AMOUNT.test(f.rate)) return null;
-  if (!Number.isInteger(count) || count < 1 || count > 1000) return null;
-  if (!f.start) return null;
+  if (f.principal.trim() && (principal === null || Number(principal) <= 0)) {
+    errors.push("El capital no es un monto válido. Escríbelo así: 1000000 o 1.000.000.");
+  }
+  if (f.rate.trim() && rate === null) errors.push("La tasa no es válida. Escríbela así: 20 o 1,5.");
+  if (f.count.trim() && (!Number.isInteger(count) || count < 1 || count > 1000)) {
+    errors.push("El número de cuotas debe ser un entero entre 1 y 1000.");
+  }
+  if (errors.length > 0 || !principal || !rate || !f.count.trim() || !f.start) return { input: null, errors };
   return {
-    principal: f.principal, interest_rate: f.rate, interest_mode: f.mode,
-    installments_count: count, frequency: f.frequency, start_date: f.start,
+    input: {
+      principal, interest_rate: rate, interest_mode: f.mode,
+      installments_count: count, frequency: f.frequency, start_date: f.start,
+    },
+    errors,
   };
 }
 
@@ -48,10 +63,11 @@ export default function LoanForm() {
   const [notes, setNotes] = useState("");
 
   // Mismo objeto mientras los campos no cambien: así el efecto de abajo solo corre ante cambios reales.
-  const input = useMemo(
-    () => toPreviewInput({ principal: principal.trim(), rate: rate.trim(), mode, count, frequency, start }),
+  const { input, errors } = useMemo(
+    () => validate({ principal, rate, mode, count, frequency, start }),
     [principal, rate, mode, count, frequency, start],
   );
+  const [triedSubmit, setTriedSubmit] = useState(false);
   const inputKey = JSON.stringify(input);
   const { mutate: requestPreview } = preview;
 
@@ -70,6 +86,7 @@ export default function LoanForm() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    setTriedSubmit(true);
     if (!input || borrower === "" || account === "") return;
     create.mutate(
       { ...input, borrower, account, notes: notes.trim() },
@@ -169,6 +186,13 @@ export default function LoanForm() {
             <textarea className="input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" />
           </label>
           <div className="grid gap-3 md:col-span-2">
+            {triedSubmit && errors.length > 0 && (
+              <ul role="alert" className="border-l-4 border-red bg-sheet px-4 py-3 text-sm text-red">
+                {errors.map((e) => (
+                  <li key={e}>{e}</li>
+                ))}
+              </ul>
+            )}
             <ErrorMessage error={create.error} />
             <div>
               <button type="submit" className="btn btn-primary" disabled={create.isPending}>

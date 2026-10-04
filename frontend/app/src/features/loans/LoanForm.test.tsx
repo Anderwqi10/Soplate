@@ -117,3 +117,32 @@ test("asks to create a borrower first", async () => {
   expect(await screen.findByText("Primero registra un deudor")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Ir a Deudores" })).toHaveAttribute("href", "/borrowers");
 });
+
+test("amounts typed with thousands dots are understood", async () => {
+  mockApi();
+  renderForm();
+  await screen.findAllByRole("option", { name: /Luis Pérez/ });
+  await userEvent.selectOptions(screen.getByLabelText("Deudor"), "4");
+  await userEvent.selectOptions(screen.getByLabelText("Cuenta de origen"), "1");
+  await userEvent.type(screen.getByLabelText("Capital prestado"), "1.000.000");
+  await userEvent.type(screen.getByLabelText("Tasa de interés (%)"), "20");
+  await userEvent.type(screen.getByLabelText("Número de cuotas"), "3");
+  await screen.findByRole("region", { name: "Vista previa" });
+  expect(client.apiFetch).toHaveBeenLastCalledWith("/loans/preview/", expect.objectContaining({
+    body: expect.objectContaining({ principal: "1000000" }),
+  }));
+});
+
+test("an invalid amount is explained instead of ignored", async () => {
+  mockApi();
+  renderForm();
+  await screen.findAllByRole("option", { name: /Luis Pérez/ });
+  await userEvent.selectOptions(screen.getByLabelText("Deudor"), "4");
+  await userEvent.selectOptions(screen.getByLabelText("Cuenta de origen"), "1");
+  await userEvent.type(screen.getByLabelText("Capital prestado"), "un millón");
+  await userEvent.type(screen.getByLabelText("Tasa de interés (%)"), "20");
+  await userEvent.type(screen.getByLabelText("Número de cuotas"), "3");
+  await userEvent.click(screen.getByRole("button", { name: "Crear préstamo" }));
+  expect(await screen.findByText(/El capital no es un monto válido/)).toBeInTheDocument();
+  expect(client.apiFetch).not.toHaveBeenCalledWith("/loans/", expect.anything());
+});
