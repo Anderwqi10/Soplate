@@ -16,7 +16,7 @@ def account_balance(account: Account) -> Decimal:
 
 
 def record_transaction(*, owner, account: Account, kind: str, amount: Decimal, date: Date,
-                       description: str = "", transfer_group=None) -> Transaction:
+                       description: str = "", transfer_group=None, loan=None) -> Transaction:
     """Registra un movimiento. `amount` llega positivo; el signo lo pone el tipo."""
     if account.owner_id != owner.id:
         raise BusinessError("La cuenta no existe.")
@@ -28,7 +28,7 @@ def record_transaction(*, owner, account: Account, kind: str, amount: Decimal, d
         raise BusinessError(f"Saldo insuficiente en la cuenta {account.name}.")
     return Transaction.objects.create(
         owner=owner, account=account, kind=kind, amount=amount * sign, date=date,
-        description=description, transfer_group=transfer_group,
+        description=description, transfer_group=transfer_group, loan=loan,
     )
 
 

@@ -80,6 +80,8 @@ class Transaction(models.Model):
     amount = models.DecimalField(**MONEY)  # con signo: + entra, - sale
     date = models.DateField()
     description = models.CharField(max_length=255, blank=True)
+    loan = models.ForeignKey("loans.Loan", on_delete=models.PROTECT, null=True, blank=True,
+                             related_name="transactions")  # solo en desembolsos y pagos
     transfer_group = models.UUIDField(null=True, blank=True)  # une las dos patas de una transferencia
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -34,7 +34,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ["id", "account", "account_name", "kind", "amount", "date", "description",
-                  "transfer_group", "created_at"]
+                  "loan", "transfer_group", "created_at"]
         read_only_fields = fields
 
 
