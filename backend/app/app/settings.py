@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # Propias
     'core',
     'ledger',
+    'loans',
 ]
 
 MIDDLEWARE = [
