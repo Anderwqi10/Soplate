@@ -1,0 +1,16 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.sqlite3
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Entorno / herramientas
+.env
+.claude/settings.local.json
+.superpowers/
