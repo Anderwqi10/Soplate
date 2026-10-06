@@ -6,12 +6,16 @@ from core.views import OwnedQuerysetMixin
 from ledger.models import Account, Transaction
 from ledger.serializers import (AccountSerializer, TransactionFilterSerializer, TransactionInputSerializer,
                                 TransactionSerializer, TransferInputSerializer)
-from ledger.services import record_transaction, transfer
+from ledger.services import delete_account, record_transaction, transfer
 
 
 class AccountViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
-    queryset = Account.objects.with_balance()
+    queryset = Account.objects.visible().with_balance()
     serializer_class = AccountSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        delete_account(owner=request.user, account=self.get_object())
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -24,7 +28,8 @@ class AccountViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
 
 class TransactionViewSet(OwnedQuerysetMixin, mixins.ListModelMixin, mixins.CreateModelMixin,
                          viewsets.GenericViewSet):
-    queryset = Transaction.objects.select_related("account")
+    # Los movimientos de cuentas eliminadas salen del historial (los saldos de las demás no cambian).
+    queryset = Transaction.objects.select_related("account").filter(account__deleted_at__isnull=True)
     serializer_class = TransactionSerializer
 
     def get_queryset(self):

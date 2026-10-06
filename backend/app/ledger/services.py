@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.db import transaction as db_transaction
 from django.db.models import Sum
+from django.utils import timezone
 
 from core.exceptions import BusinessError
 from core.money import q2
@@ -50,3 +51,18 @@ def transfer(*, owner, from_account: Account, to_account: Account, amount: Decim
     incoming = record_transaction(owner=owner, account=to_account, kind=TransactionKind.TRANSFER_IN,
                                   amount=amount, date=date, description=description, transfer_group=group)
     return outgoing, incoming
+
+
+@db_transaction.atomic
+def delete_account(*, owner, account: Account) -> None:
+    """Oculta una cuenta en toda la app. Solo si está en $ 0 y ningún préstamo abierto depende de ella."""
+    if account.owner_id != owner.id:
+        raise BusinessError("La cuenta no existe.")
+    account = Account.objects.select_for_update().get(pk=account.pk)
+    if account_balance(account) != 0:
+        raise BusinessError("Solo puedes eliminar una cuenta con saldo $ 0. Transfiere o retira el dinero primero.")
+    if account.loans.filter(closed_at__isnull=True).exists():
+        raise BusinessError("La cuenta tiene préstamos abiertos; sus pagos llegan a ella.")
+    account.deleted_at = timezone.now()
+    account.is_active = False
+    account.save(update_fields=["deleted_at", "is_active"])

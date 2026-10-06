@@ -1,15 +1,18 @@
 from django.utils import timezone
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from core.money import money_str
 from core.views import OwnedQuerysetMixin
+from ledger.serializers import OwnedAccountField
 from loans.domain import build_schedule
 from loans.models import Borrower, Loan
 from loans.serializers import (BorrowerSerializer, LoanFilterSerializer, LoanInputSerializer,
                                LoanPreviewInputSerializer,
                                PaymentInputSerializer, loan_detail, loan_list_item, payment_data, schedule_data)
-from loans.services import create_loan, loans_with_totals, register_payment, summarize_loan
+from loans.services import (create_loan, delete_loan, loans_with_totals, register_payment, settle_loan,
+                            summarize_loan, write_off_loan)
 
 
 class BorrowerViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
@@ -19,7 +22,19 @@ class BorrowerViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
 
 class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):
     queryset = loans_with_totals()
-    http_method_names = ["get", "post", "patch", "head", "options"]  # los préstamos no se borran
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def get_queryset(self):
+        # Los préstamos cerrados (liquidados, reportados o eliminados) desaparecen de la app.
+        return super().get_queryset().open()
+
+    @staticmethod
+    def _closed_response(loan):
+        return Response({
+            "id": loan.id,
+            "close_reason": loan.close_reason,
+            "written_off_amount": money_str(loan.written_off_amount) if loan.written_off_amount is not None else None,
+        })
 
     def _detail_response(self, pk, status_code=status.HTTP_200_OK):
         loan = self.get_queryset().get(pk=pk)  # re-leer con totales frescos
@@ -70,3 +85,24 @@ class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):
         data.is_valid(raise_exception=True)
         register_payment(owner=request.user, loan=loan, **data.validated_data)
         return self._detail_response(loan.pk, status.HTTP_201_CREATED)
+
+    def destroy(self, request, pk=None):
+        delete_loan(owner=request.user, loan=self.get_object(), today=timezone.localdate())
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["post"])
+    def settle(self, request, pk=None):
+        data = SettleInputSerializer(data=request.data, context={"request": request})
+        data.is_valid(raise_exception=True)
+        loan = settle_loan(owner=request.user, loan=self.get_object(), today=timezone.localdate(),
+                           account=data.validated_data["account"])
+        return self._closed_response(loan)
+
+    @action(detail=True, methods=["post"], url_path="write-off")
+    def write_off(self, request, pk=None):
+        loan = write_off_loan(owner=request.user, loan=self.get_object(), today=timezone.localdate())
+        return self._closed_response(loan)
+
+
+class SettleInputSerializer(serializers.Serializer):
+    account = OwnedAccountField(required=False, allow_null=True, default=None)

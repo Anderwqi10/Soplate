@@ -68,9 +68,10 @@ def test_patch_only_changes_notes(api, account, borrower):
     assert r.status_code == 200 and r.json()["notes"] == "Paga los viernes" and r.json()["principal"] == "1000000.00"
 
 
-def test_loans_cannot_be_deleted(api, account, borrower):
+def test_unpaid_loans_cannot_be_deleted(api, account, borrower):
+    # Solo los préstamos pagados se eliminan; los demás se liquidan o se reportan como pérdida.
     loan_id = create_loan(api, account, borrower).json()["id"]
-    assert api.delete(f"/api/loans/{loan_id}/").status_code == 405
+    assert api.delete(f"/api/loans/{loan_id}/").status_code == 400
 
 
 def test_other_user_cannot_see_or_use(api, other_api, account, borrower):

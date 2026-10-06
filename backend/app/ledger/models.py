@@ -48,6 +48,10 @@ MANUAL_KINDS = [
 
 
 class AccountQuerySet(models.QuerySet):
+    def visible(self):
+        """Cuentas no eliminadas (activas o archivadas)."""
+        return self.filter(deleted_at__isnull=True)
+
     def with_balance(self):
         """Saldo = saldo inicial + suma de movimientos (calculado por la base de datos)."""
         zero = Value(Decimal("0"), output_field=DecimalField(**MONEY))
@@ -63,6 +67,8 @@ class Account(models.Model):
     initial_balance = models.DecimalField(**MONEY, default=Decimal("0"))
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Eliminar oculta la cuenta en toda la app; la fila queda para que la historia de otros cuadre.
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = AccountQuerySet.as_manager()
 

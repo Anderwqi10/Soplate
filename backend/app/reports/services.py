@@ -13,19 +13,26 @@ ZERO = Decimal("0.00")
 UPCOMING_DAYS = 7
 
 
-def _summaries(owner, today: date):
-    return [(loan, summarize_loan(loan, today)) for loan in loans_with_totals().filter(owner=owner)]
+def _summaries(owner, today: date, include_closed: bool = False):
+    loans = loans_with_totals().filter(owner=owner)
+    if not include_closed:
+        loans = loans.open()
+    return [(loan, summarize_loan(loan, today)) for loan in loans]
 
 
 def dashboard(owner, today: date) -> dict:
     accounts = list(Account.objects.filter(owner=owner, is_active=True).with_balance())
     total_balance = sum((a.balance for a in accounts), ZERO)
-    summaries = _summaries(owner, today)
+    all_summaries = _summaries(owner, today, include_closed=True)
+    # Lo pendiente y los estados solo cuentan préstamos abiertos; los cerrados ya no se cobran.
+    summaries = [(loan, s) for loan, s in all_summaries if loan.closed_at is None]
 
     outstanding = sum((s.outstanding for _, s in summaries), ZERO)
     outstanding_principal = sum((s.outstanding_principal for _, s in summaries), ZERO)
     # Cada peso cobrado trae capital e interés en la misma proporción que el total del préstamo.
-    interest_earned = sum((q2(s.paid_total * s.interest_total / s.total_amount) for _, s in summaries), ZERO)
+    # Incluye préstamos cerrados: lo que ya se cobró fue ganancia real.
+    interest_earned = sum((q2(s.paid_total * s.interest_total / s.total_amount) for _, s in all_summaries), ZERO)
+    losses = sum((loan.written_off_amount or ZERO for loan, _ in all_summaries), ZERO)
     by_status = Counter(s.status for _, s in summaries)
 
     upcoming, overdue = [], []
@@ -44,6 +51,7 @@ def dashboard(owner, today: date) -> dict:
         "outstanding_total": money_str(outstanding),
         "outstanding_principal": money_str(outstanding_principal),
         "interest_earned": money_str(interest_earned),
+        "losses_total": money_str(losses),
         "net_worth": money_str(total_balance + outstanding),
         "accounts": [{"id": a.id, "name": a.name, "balance": money_str(a.balance)} for a in accounts],
         "loans_by_status": {st: by_status.get(st, 0) for st in LoanStatus.values},

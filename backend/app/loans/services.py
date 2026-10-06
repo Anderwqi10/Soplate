@@ -10,9 +10,9 @@ from core.exceptions import BusinessError
 from core.money import q2
 from ledger.models import Account, TransactionKind
 from ledger.services import account_balance, record_transaction
-from loans.domain import (InstallmentState, InstallmentStatus, allocate_payments, build_schedule,
+from loans.domain import (InstallmentState, InstallmentStatus, LoanStatus, allocate_payments, build_schedule,
                           days_overdue, loan_status)
-from loans.models import Borrower, Installment, Loan, Payment
+from loans.models import Borrower, CloseReason, Installment, Loan, Payment
 
 
 @dataclass
@@ -112,3 +112,52 @@ def register_payment(*, owner, loan: Loan, amount: Decimal, date: Date, account:
     tx = record_transaction(owner=owner, account=account, kind=TransactionKind.LOAN_PAYMENT, amount=amount,
                             date=date, loan=loan, description=f"Pago de {loan.borrower.full_name}")
     return Payment.objects.create(loan=loan, account=account, transaction=tx, amount=amount, date=date, note=note)
+
+
+def _lock_open_loan(owner, loan: Loan) -> Loan:
+    """Bloquea el préstamo para cerrarlo; falla si es ajeno o ya fue cerrado."""
+    if loan.owner_id != owner.id:
+        raise BusinessError("El préstamo no existe.")
+    loan = Loan.objects.select_for_update().get(pk=loan.pk)
+    if loan.closed_at:
+        raise BusinessError("Este préstamo ya fue cerrado.")
+    return loan
+
+
+def _close(loan: Loan, reason: str, today: Date, written_off: Decimal | None = None) -> Loan:
+    loan.closed_at = today
+    loan.close_reason = reason
+    loan.written_off_amount = written_off
+    loan.save(update_fields=["closed_at", "close_reason", "written_off_amount"])
+    return loan
+
+
+@db_transaction.atomic
+def settle_loan(*, owner, loan: Loan, today: Date, account: Account | None = None) -> Loan:
+    """El deudor paga todo lo pendiente hoy: entra a la cuenta y el préstamo se cierra."""
+    loan = _lock_open_loan(owner, loan)
+    summary = summarize_loan(loan, today)
+    if summary.status not in (LoanStatus.ACTIVE, LoanStatus.OVERDUE):
+        raise BusinessError("Solo se puede liquidar un préstamo al día o retrasado.")
+    register_payment(owner=owner, loan=loan, amount=summary.outstanding, date=today, account=account,
+                     note="Liquidación del préstamo")
+    return _close(loan, CloseReason.SETTLED, today)
+
+
+@db_transaction.atomic
+def write_off_loan(*, owner, loan: Loan, today: Date) -> Loan:
+    """Lo que no se pagó pasa a pérdida; las cuentas no cambian (ese dinero salió al prestar)."""
+    loan = _lock_open_loan(owner, loan)
+    summary = summarize_loan(loan, today)
+    if summary.status not in (LoanStatus.OVERDUE, LoanStatus.DEFAULTED):
+        raise BusinessError("Solo se puede reportar como pérdida un préstamo retrasado o vencido.")
+    return _close(loan, CloseReason.WRITTEN_OFF, today, written_off=summary.outstanding)
+
+
+@db_transaction.atomic
+def delete_loan(*, owner, loan: Loan, today: Date) -> Loan:
+    """Quita de la lista un préstamo ya pagado; sus pagos siguen contando en las cuentas."""
+    loan = _lock_open_loan(owner, loan)
+    if summarize_loan(loan, today).status != LoanStatus.PAID:
+        raise BusinessError("Solo se puede eliminar un préstamo pagado. Liquídalo o repórtalo como pérdida.")
+    return _close(loan, CloseReason.DELETED, today)

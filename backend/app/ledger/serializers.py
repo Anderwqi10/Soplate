@@ -13,7 +13,7 @@ class OwnedAccountField(serializers.PrimaryKeyRelatedField):
     """Solo acepta cuentas del usuario que hace la petición (una ajena = "no existe")."""
 
     def get_queryset(self):
-        return Account.objects.filter(owner=self.context["request"].user)
+        return Account.objects.visible().filter(owner=self.context["request"].user)
 
 
 class AccountSerializer(serializers.ModelSerializer):

@@ -25,6 +25,18 @@ class Borrower(models.Model):
         return self.full_name
 
 
+class CloseReason(models.TextChoices):
+    SETTLED = "SETTLED", "Liquidado"
+    WRITTEN_OFF = "WRITTEN_OFF", "Reportado como pérdida"
+    DELETED = "DELETED", "Eliminado"
+
+
+class OpenLoanQuerySet(models.QuerySet):
+    def open(self):
+        """Préstamos que siguen en la lista (no liquidados, reportados ni eliminados)."""
+        return self.filter(closed_at__isnull=True)
+
+
 class Loan(models.Model):
     """Condiciones del préstamo. Estado, saldo y fecha de fin se calculan (ver loans.services)."""
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="loans")
@@ -39,6 +51,12 @@ class Loan(models.Model):
     start_date = models.DateField()
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Cerrar no borra la fila: sus pagos y movimientos siguen sosteniendo los saldos y los reportes.
+    closed_at = models.DateField(null=True, blank=True)
+    close_reason = models.CharField(max_length=12, choices=CloseReason.choices, blank=True)
+    written_off_amount = models.DecimalField(**MONEY, null=True, blank=True)  # pérdida reportada
+
+    objects = OpenLoanQuerySet.as_manager()
 
     class Meta:
         ordering = ["-start_date", "-id"]
