@@ -2,6 +2,7 @@ import { Link, useSearchParams } from "react-router";
 import type { LoanListItem, LoanStatus } from "../../api/types";
 import EmptyState from "../../components/EmptyState";
 import ErrorMessage from "../../components/ErrorMessage";
+import Notice from "../../components/Notice";
 import PageHeader from "../../components/PageHeader";
 import StatusBadge from "../../components/StatusBadge";
 import { formatDate, formatMoney } from "../../lib/format";
@@ -98,6 +99,8 @@ export default function LoansPage() {
           </Link>
         }
       />
+
+      <Notice />
 
       <nav aria-label="Filtrar por estado" className="mb-6 flex gap-1 overflow-x-auto border-b border-rule">
         {TABS.map((t) => {

@@ -46,3 +46,7 @@ export function useCreateTransfer() {
     apiFetch<{ outgoing: Transaction; incoming: Transaction }>("/transfers/", { method: "POST", body }),
   );
 }
+
+export function useDeleteAccount(id: number) {
+  return useMoneyMutation(() => apiFetch<void>(`/accounts/${id}/`, { method: "DELETE" }), [], { waitForRefresh: false });
+}

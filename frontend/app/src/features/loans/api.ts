@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../api/client";
-import type { LoanDetail, LoanInput, LoanListItem, LoanPreview, LoanPreviewInput, LoanStatus, PaymentInput } from "../../api/types";
+import type { LoanClosed, LoanDetail, LoanInput, LoanListItem, LoanPreview, LoanPreviewInput, LoanStatus, PaymentInput } from "../../api/types";
 import { useMoneyMutation } from "../../api/useMoneyMutation";
 
 export interface LoanFilters {
@@ -43,4 +43,27 @@ export function useUpdateLoanNotes(loanId: number) {
     mutationFn: (notes: string) => apiFetch<LoanDetail>(`/loans/${loanId}/`, { method: "PATCH", body: { notes } }),
     onSuccess: (loan) => queryClient.setQueryData(["loans", loanId], loan),
   });
+}
+
+// Cerrar un préstamo lo saca de la app: se refresca todo sin esperar, porque la pantalla de detalle se abandona.
+const CLOSING = { waitForRefresh: false };
+
+export function useSettleLoan(loanId: number) {
+  return useMoneyMutation(
+    (account: number) => apiFetch<LoanClosed>(`/loans/${loanId}/settle/`, { method: "POST", body: { account } }),
+    [["loans"]],
+    CLOSING,
+  );
+}
+
+export function useWriteOffLoan(loanId: number) {
+  return useMoneyMutation(
+    () => apiFetch<LoanClosed>(`/loans/${loanId}/write-off/`, { method: "POST" }),
+    [["loans"]],
+    CLOSING,
+  );
+}
+
+export function useDeleteLoan(loanId: number) {
+  return useMoneyMutation(() => apiFetch<void>(`/loans/${loanId}/`, { method: "DELETE" }), [["loans"]], CLOSING);
 }

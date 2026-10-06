@@ -110,6 +110,12 @@ export interface LoanPreview {
   installments: Pick<InstallmentRow, "number" | "due_date" | "principal_amount" | "interest_amount" | "amount">[];
 }
 
+export interface LoanClosed {
+  id: number;
+  close_reason: "SETTLED" | "WRITTEN_OFF" | "DELETED";
+  written_off_amount: Money | null;
+}
+
 export interface DueRow {
   loan_id: number;
   borrower_name: string;
@@ -124,6 +130,7 @@ export interface Dashboard {
   outstanding_principal: Money;
   interest_earned: Money;
   net_worth: Money;
+  losses_total: Money;
   accounts: { id: number; name: string; balance: Money }[];
   loans_by_status: Record<LoanStatus, number>;
   upcoming: DueRow[];

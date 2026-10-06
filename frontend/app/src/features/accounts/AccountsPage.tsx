@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { Account } from "../../api/types";
 import EmptyState from "../../components/EmptyState";
 import ErrorMessage from "../../components/ErrorMessage";
+import Notice from "../../components/Notice";
 import PageHeader from "../../components/PageHeader";
 import Panel from "../../components/Panel";
 import { formatMoney } from "../../lib/format";
@@ -84,6 +85,7 @@ export default function AccountsPage() {
         </div>
       )}
 
+      <Notice />
       <ErrorMessage error={accounts.error} />
 
       {accounts.isPending && <p className="text-muted">Cargando cuentas…</p>}

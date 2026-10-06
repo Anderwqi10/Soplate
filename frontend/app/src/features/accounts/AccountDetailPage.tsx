@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
+import ConfirmBox from "../../components/ConfirmBox";
 import EmptyState from "../../components/EmptyState";
 import ErrorMessage from "../../components/ErrorMessage";
 import PageHeader from "../../components/PageHeader";
 import Panel from "../../components/Panel";
 import { formatDate, formatMoney } from "../../lib/format";
 import { ACCOUNT_KIND_LABEL, TRANSACTION_KIND_LABEL } from "../../lib/status";
-import { useAccount, useTransactions, useUpdateAccount } from "./api";
+import { useAccount, useDeleteAccount, useTransactions, useUpdateAccount } from "./api";
 import TransactionForm from "./TransactionForm";
 
 export default function AccountDetailPage() {
@@ -14,13 +15,18 @@ export default function AccountDetailPage() {
   const account = useAccount(id);
   const transactions = useTransactions({ account: id });
   const update = useUpdateAccount(id);
+  const remove = useDeleteAccount(id);
+  const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (account.isPending) return <p className="text-muted">Cargando cuenta…</p>;
   if (account.isError) return <ErrorMessage error={account.error} />;
 
   const acc = account.data;
   const rows = transactions.data ?? [];
+  // Solo una cuenta en $ 0 se puede eliminar (el backend lo vuelve a verificar).
+  const canDelete = Number(acc.balance) === 0;
 
   return (
     <>
@@ -44,6 +50,11 @@ export default function AccountDetailPage() {
             >
               {acc.is_active ? "Archivar cuenta" : "Reactivar cuenta"}
             </button>
+            {canDelete && (
+              <button type="button" className="btn btn-quiet text-red" onClick={() => setConfirmingDelete(true)}>
+                Eliminar cuenta
+              </button>
+            )}
           </>
         }
       />
@@ -61,6 +72,29 @@ export default function AccountDetailPage() {
       <div className="mb-6">
         <ErrorMessage error={update.error} />
       </div>
+
+      {confirmingDelete && (
+        <div className="mb-8">
+          <ConfirmBox
+            danger
+            title={`¿Eliminar la cuenta ${acc.name}?`}
+            confirmLabel="Sí, eliminar cuenta"
+            pending={remove.isPending}
+            error={remove.error}
+            onCancel={() => {
+              setConfirmingDelete(false);
+              remove.reset();
+            }}
+            onConfirm={() =>
+              remove.mutate(undefined, {
+                onSuccess: () => navigate("/accounts", { state: { notice: `La cuenta ${acc.name} se eliminó.` } }),
+              })
+            }
+          >
+            <p>Está en $ 0. Desaparecerá de la app junto con su historial de movimientos; tus otras cuentas no cambian.</p>
+          </ConfirmBox>
+        </div>
+      )}
 
       {adding && (
         <div className="mb-8">

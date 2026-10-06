@@ -7,6 +7,7 @@ import StatusBadge from "../../components/StatusBadge";
 import { formatDate, formatMoney } from "../../lib/format";
 import { FREQUENCY_LABEL } from "../../lib/status";
 import { useLoan, useUpdateLoanNotes } from "./api";
+import LoanActions from "./LoanActions";
 import PaymentForm from "./PaymentForm";
 
 function Figure({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
@@ -176,6 +177,8 @@ export default function LoanDetailPage() {
           </section>
 
           <NotesEditor key={loan.id} loan={loan} />
+
+          <LoanActions loan={loan} />
         </div>
       </div>
     </>

@@ -14,7 +14,7 @@ const n = (s: string | null) => (s ?? "").replace(/\s/g, " ");
 function dashboard(overrides: Partial<Dashboard> = {}): Dashboard {
   return {
     total_balance: "600000.00", outstanding_total: "600000.00", outstanding_principal: "500000.00",
-    interest_earned: "100000.00", net_worth: "1200000.00",
+    interest_earned: "100000.00", net_worth: "1200000.00", losses_total: "0.00",
     accounts: [{ id: 1, name: "Bancolombia", balance: "600000.00" }],
     loans_by_status: { ACTIVE: 1, OVERDUE: 0, DEFAULTED: 0, PAID: 0 },
     upcoming: [], overdue: [], ...overrides,
@@ -64,4 +64,10 @@ test("a new user sees guidance instead of empty lists", async () => {
   expect(await screen.findByRole("link", { name: "Crea tu primera cuenta" })).toHaveAttribute("href", "/accounts");
   expect(screen.getByText("No hay cuotas en los próximos 7 días.")).toBeInTheDocument();
   expect(screen.getByText("No hay cuotas vencidas.")).toBeInTheDocument();
+});
+
+test("reported losses are shown", async () => {
+  vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ losses_total: "350000.00" }));
+  renderWithProviders(<DashboardPage />);
+  expect(n((await screen.findByTestId("losses_total")).textContent)).toBe("$ 350.000");
 });

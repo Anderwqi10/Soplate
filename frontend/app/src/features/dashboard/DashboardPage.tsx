@@ -77,6 +77,15 @@ export default function DashboardPage() {
               </span>
               .
             </p>
+            {Number(d.losses_total) > 0 && (
+              <p className="mt-1 text-sm text-muted">
+                Pérdidas reportadas:{" "}
+                <span data-testid="losses_total" className="tabular font-semibold text-red">
+                  {formatMoney(d.losses_total)}
+                </span>
+                .
+              </p>
+            )}
           </section>
 
           <section className="grid gap-3">
