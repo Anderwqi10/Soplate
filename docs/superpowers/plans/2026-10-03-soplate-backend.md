@@ -57,7 +57,7 @@
   - Fixtures en `backend/conftest.py`: `user`, `other_user` (via `django_user_model.objects.create_user`), `api` (APIClient con `force_authenticate(user)`), `other_api`.
   - URLs: `POST /api/auth/token/`, `POST /api/auth/token/refresh/`, `GET /api/me/` → `{"id", "username", "email"}`.
 
-- [ ] **Step 1: Inicializar repo y entorno**
+- [x] **Step 1: Inicializar repo y entorno**
 
 ```bash
 git init
@@ -71,7 +71,7 @@ cd backend && django-admin startproject config .
 `pytest.ini`: `DJANGO_SETTINGS_MODULE = config.settings`, `python_files = test_*.py`.
 Settings: apps `rest_framework`, `rest_framework_simplejwt`, `corsheaders`, `core` (más `ledger`, `loans`, `reports` cuando existan); valores de Global Constraints; `SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(hours=8), "REFRESH_TOKEN_LIFETIME": timedelta(days=7)}`.
 
-- [ ] **Step 2: Escribir tests que fallan**
+- [x] **Step 2: Escribir tests que fallan**
 
 ```python
 # core/tests/test_money.py
