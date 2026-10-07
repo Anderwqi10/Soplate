@@ -8,6 +8,7 @@ import { formatDate, formatMoney } from "../../lib/format";
 import { FREQUENCY_LABEL } from "../../lib/status";
 import { useLoan, useUpdateLoanNotes } from "./api";
 import LoanActions from "./LoanActions";
+import LoanTermsEditor from "./LoanTermsEditor";
 import PaymentForm from "./PaymentForm";
 
 function Figure({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
@@ -175,6 +176,8 @@ export default function LoanDetailPage() {
               <PaymentForm loan={loan} />
             )}
           </section>
+
+          <LoanTermsEditor key={`${loan.id}-${loan.interest_rate}-${loan.start_date}`} loan={loan} />
 
           <NotesEditor key={loan.id} loan={loan} />
 

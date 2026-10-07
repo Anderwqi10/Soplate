@@ -67,3 +67,11 @@ export function useWriteOffLoan(loanId: number) {
 export function useDeleteLoan(loanId: number) {
   return useMoneyMutation(() => apiFetch<void>(`/loans/${loanId}/`, { method: "DELETE" }), [["loans"]], CLOSING);
 }
+
+export function useUpdateLoanTerms(loanId: number) {
+  return useMoneyMutation(
+    (body: { interest_rate?: string; start_date?: string }) =>
+      apiFetch<LoanDetail>(`/loans/${loanId}/terms/`, { method: "PATCH", body }),
+    [["loans"]],
+  );
+}
