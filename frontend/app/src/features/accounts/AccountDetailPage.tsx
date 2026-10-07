@@ -127,7 +127,7 @@ export default function AccountDetailPage() {
                       <span className="block">{TRANSACTION_KIND_LABEL[tx.kind]}</span>
                       {tx.description && <span className="block text-sm text-muted">{tx.description}</span>}
                       {tx.loan && (
-                        <Link to={`/loans/${tx.loan}`} className="text-sm text-ledger underline-offset-4 hover:underline">
+                        <Link to={`/loans/${tx.loan}`} className="text-sm link">
                           Ver préstamo
                         </Link>
                       )}

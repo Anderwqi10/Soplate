@@ -110,7 +110,7 @@ export default function LoansPage() {
               key={t.label}
               to={hrefFor(t.status)}
               aria-current={current ? "page" : undefined}
-              className={`-mb-px border-b-[3px] px-3 py-2 whitespace-nowrap ${current ? "border-ledger font-semibold" : "border-transparent text-muted hover:text-ink"}`}
+              className={`-mb-px border-b-[3px] px-3 py-2 whitespace-nowrap ${current ? "border-accent font-semibold" : "border-transparent text-muted hover:text-ink"}`}
             >
               {t.label}
             </Link>
@@ -121,7 +121,7 @@ export default function LoansPage() {
       {borrower && (
         <p className="mb-4 text-sm text-muted">
           Mostrando los préstamos de un deudor.{" "}
-          <button type="button" className="text-ledger underline-offset-4 hover:underline" onClick={() => setParams(status ? { status } : {})}>
+          <button type="button" className="link" onClick={() => setParams(status ? { status } : {})}>
             Ver todos
           </button>
         </p>

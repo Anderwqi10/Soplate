@@ -27,7 +27,7 @@ export default function ConfirmBox({ title, children, confirmLabel, onConfirm, o
       role="alertdialog"
       aria-label={title}
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
-      className={`grid gap-3 border border-t-[3px] bg-sheet p-4 ${danger ? "border-rule border-t-red" : "border-rule border-t-ledger"}`}
+      className={`grid gap-3 border border-t-[3px] bg-sheet p-4 ${danger ? "border-rule border-t-red" : "border-rule border-t-accent"}`}
     >
       <p className="font-semibold">{title}</p>
       <div className="text-sm">{children}</div>

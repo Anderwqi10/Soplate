@@ -13,7 +13,7 @@ export default function Panel({ title, onClose, children }: { title: string; onC
       ref={ref}
       aria-label={title}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
-      className="border border-rule border-t-[3px] border-t-ledger bg-sheet p-5"
+      className="border border-rule border-t-[3px] border-t-accent bg-sheet p-5"
     >
       <div className="mb-4 flex items-baseline justify-between gap-4">
         <h2 className="text-xl font-semibold">{title}</h2>

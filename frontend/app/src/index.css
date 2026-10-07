@@ -1,41 +1,48 @@
 @import "tailwindcss";
-@import "@fontsource-variable/bricolage-grotesque";
-@import "@fontsource-variable/public-sans";
+@import "@fontsource-variable/manrope";
 
 /*
-  Sistema visual de Soplate: el libro de contabilidad del prestamista.
-  Papel con renglones verdes, tinta azul-negra, negativos en tinta roja.
-  Lo único llamativo es la tarjeta de cobro (cuotas como cuadritos sellados).
+  Sistema visual de Soplate: moderno y minimalista.
+  Azul noche y blanco como base; el naranja se reserva para lo que se puede tocar
+  (botón principal, sección activa, foco). Los estados de préstamos conservan su
+  propio color (verde, ámbar, rojo) para no confundirse con el naranja.
 */
 @theme {
-  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
 
-  --color-paper: #f2f5f0;   /* papel de libro contable */
-  --color-sheet: #fbfcfa;   /* hoja apoyada sobre el papel */
-  --color-ink: #1c2b33;     /* tinta azul-negra */
-  --color-muted: #5f6f69;   /* lápiz */
-  --color-rule: #c9d6cc;    /* renglón verde */
-  --color-ledger: #2e6b4f;  /* tinta verde: acciones, al día */
-  --color-on-ledger: #f2f5f0;
-  --color-red: #b42318;     /* tinta roja: negativos, vencido */
-  --color-amber: #9a6512;   /* sello de atraso */
+  --color-navy: #0f2742;       /* menú, banda del resumen, títulos */
+  --color-navy-soft: #1b3a5e;  /* superficies sobre azul noche */
+  --color-on-navy: #ffffff;
+  --color-accent: #f07b2b;     /* naranja: solo acciones */
+  --color-on-accent: #0f2742;  /* texto sobre naranja (el blanco no tiene contraste suficiente) */
+  --color-paper: #f5f7fa;      /* fondo de página */
+  --color-sheet: #ffffff;      /* superficies */
+  --color-ink: #13233a;        /* texto */
+  --color-muted: #5b6b80;
+  --color-rule: #dce3ec;
+  --color-ledger: #1a7f50;     /* verde: al día, entradas de dinero, cuotas pagadas */
+  --color-on-ledger: #ffffff;
+  --color-red: #c2362b;        /* vencido, salidas, pérdidas */
+  --color-amber: #a8650a;      /* retrasado (más oscuro que el naranja para no confundirse) */
 
-  --radius-control: 4px;
+  --radius-control: 8px;
 }
 
-/* Modo oscuro: el mismo libro de noche, verde profundo en vez de negro. */
+/* Modo oscuro: la misma idea de noche, con el azul como fondo. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-paper: #12201b;
-    --color-sheet: #182a24;
-    --color-ink: #e4ece7;
-    --color-muted: #9aaba3;
-    --color-rule: #2d433a;
-    --color-ledger: #74c39a;
-    --color-on-ledger: #0f1c17;
-    --color-red: #f2867b;
-    --color-amber: #e2ac55;
+    --color-navy: #091a2e;
+    --color-navy-soft: #16304f;
+    --color-paper: #0b1a2e;
+    --color-sheet: #11253d;
+    --color-ink: #e8eef6;
+    --color-muted: #9fb0c5;
+    --color-rule: #23405f;
+    --color-ledger: #4cc38a;
+    --color-on-ledger: #0b1a2e;
+    --color-red: #f08779;
+    --color-amber: #e8b45a;
   }
 }
 
@@ -60,6 +67,7 @@
   h3 {
     font-family: var(--font-display);
     line-height: 1.15;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
@@ -70,7 +78,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-ledger);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 }
@@ -98,7 +106,7 @@
 
   .input:focus-visible {
     outline-offset: 0;
-    border-color: var(--color-ledger);
+    border-color: var(--color-accent);
   }
 
   .btn {
@@ -118,14 +126,32 @@
   }
 
   .btn-primary {
-    background: var(--color-ledger);
-    color: var(--color-on-ledger);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.05);
   }
 
   .btn-quiet {
     color: var(--color-ink);
     border: 1px solid var(--color-rule);
-    background: transparent;
+    background: var(--color-sheet);
+  }
+
+  .btn-quiet:hover {
+    border-color: var(--color-muted);
+  }
+
+  /* Enlaces dentro del texto: azul con subrayado naranja (el naranja solo no se lee sobre blanco). */
+  .link {
+    font-weight: 600;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
   }
 }
 

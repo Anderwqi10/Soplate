@@ -168,7 +168,7 @@ export default function LoanDetailPage() {
             </dl>
           </section>
 
-          <section className="grid gap-3 border border-rule border-t-[3px] border-t-ledger bg-sheet p-5">
+          <section className="grid gap-3 border border-rule border-t-[3px] border-t-accent bg-sheet p-5">
             <h2 className="text-xl font-semibold">Registrar pago</h2>
             {loan.status === "PAID" ? (
               <p className="text-muted">Este préstamo ya está pagado.</p>

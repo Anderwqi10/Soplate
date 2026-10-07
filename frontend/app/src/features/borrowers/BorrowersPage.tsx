@@ -95,7 +95,7 @@ export default function BorrowersPage() {
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-4 text-sm">
-                  <Link to={`/loans?borrower=${b.id}`} className="text-ledger underline-offset-4 hover:underline">
+                  <Link to={`/loans?borrower=${b.id}`} className="link">
                     Ver préstamos
                   </Link>
                   <button type="button" className="underline-offset-4 hover:underline" onClick={() => setEditing({ mode: "edit", borrower: b })}>
