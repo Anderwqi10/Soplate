@@ -12,7 +12,7 @@ from loans.serializers import (BorrowerSerializer, LoanFilterSerializer, LoanInp
                                LoanPreviewInputSerializer,
                                PaymentInputSerializer, loan_detail, loan_list_item, payment_data, schedule_data)
 from loans.services import (create_loan, delete_loan, loans_with_totals, register_payment, settle_loan,
-                            summarize_loan, write_off_loan)
+                            summarize_loan, update_loan_terms, write_off_loan)
 
 
 class BorrowerViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
@@ -98,6 +98,14 @@ class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):
                            account=data.validated_data["account"])
         return self._closed_response(loan)
 
+    @action(detail=True, methods=["patch"])
+    def terms(self, request, pk=None):
+        data = TermsInputSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        loan = update_loan_terms(owner=request.user, loan=self.get_object(), today=timezone.localdate(),
+                                 **data.validated_data)
+        return self._detail_response(loan.pk)
+
     @action(detail=True, methods=["post"], url_path="write-off")
     def write_off(self, request, pk=None):
         loan = write_off_loan(owner=request.user, loan=self.get_object(), today=timezone.localdate())
@@ -106,3 +114,13 @@ class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):
 
 class SettleInputSerializer(serializers.Serializer):
     account = OwnedAccountField(required=False, allow_null=True, default=None)
+
+
+class TermsInputSerializer(serializers.Serializer):
+    interest_rate = serializers.DecimalField(max_digits=6, decimal_places=2, min_value=0, required=False)
+    start_date = serializers.DateField(required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("Indica la nueva tasa o la nueva fecha de inicio.")
+        return attrs

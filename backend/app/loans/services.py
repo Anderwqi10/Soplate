@@ -161,3 +161,38 @@ def delete_loan(*, owner, loan: Loan, today: Date) -> Loan:
     if summarize_loan(loan, today).status != LoanStatus.PAID:
         raise BusinessError("Solo se puede eliminar un préstamo pagado. Liquídalo o repórtalo como pérdida.")
     return _close(loan, CloseReason.DELETED, today)
+
+
+@db_transaction.atomic
+def update_loan_terms(*, owner, loan: Loan, today: Date, interest_rate: Decimal | None = None,
+                      start_date: Date | None = None) -> Loan:
+    """
+    Cambia la tasa y/o la fecha de inicio y recalcula TODO el cronograma.
+    Los pagos no se tocan: al calcular, se reparten sobre las cuotas nuevas (FIFO).
+    """
+    loan = _lock_open_loan(owner, loan)
+    rate = loan.interest_rate if interest_rate is None else interest_rate
+    start = start_date or loan.start_date
+
+    first_payment = loan.payments.order_by("date").values_list("date", flat=True).first()
+    if first_payment and first_payment < start:
+        raise BusinessError("Hay pagos registrados antes de la nueva fecha de inicio.")
+
+    schedule = build_schedule(loan.principal, rate, loan.interest_mode, loan.installments_count, loan.frequency, start)
+    new_total = sum((s.amount for s in schedule), Decimal("0"))
+    paid = q2(loan.payments.aggregate(total=Sum("amount"))["total"] or 0)
+    if paid > new_total:
+        raise BusinessError(f"Lo ya pagado ({paid}) supera el nuevo total del préstamo ({new_total}).")
+
+    loan.installments.all().delete()
+    Installment.objects.bulk_create([
+        Installment(loan=loan, number=s.number, due_date=s.due_date, principal_amount=s.principal_amount,
+                    interest_amount=s.interest_amount, amount=s.amount)
+        for s in schedule
+    ])
+    loan.interest_rate = rate
+    loan.start_date = start
+    loan.save(update_fields=["interest_rate", "start_date"])
+    # El desembolso ocurre en la fecha de inicio: así el historial de la cuenta sigue cuadrando.
+    loan.transactions.filter(kind=TransactionKind.LOAN_DISBURSEMENT).update(date=start)
+    return loan
