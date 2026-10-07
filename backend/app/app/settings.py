@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -24,9 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-rn-^^+$*c7#2_g6ki6gq-qo@jd@7)jxp*_gf_-o-a3sshwvcn5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# En producción se define DJANGO_DEBUG=false; en tu computador queda activo.
+DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 
-ALLOWED_HOSTS = []
+# Desarrollo: se acepta cualquier equipo (para probar desde el celular por WiFi).
+# Producción: solo los dominios de DJANGO_ALLOWED_HOSTS, separados por coma.
+ALLOWED_HOSTS = ["*"] if DEBUG else [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h]
 
 
 # Application definition
@@ -149,5 +153,10 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-# El frontend de Vite corre en este origen durante el desarrollo.
-CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
+# Orígenes desde los que el frontend puede llamar a la API.
+# Desarrollo: el computador y cualquier equipo de la red local (192.168.x.x, 10.x.x.x).
+# Producción: los de DJANGO_CORS_ORIGINS, separados por coma.
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES = [r"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$"]
+else:
+    CORS_ALLOWED_ORIGINS = [o for o in os.environ.get("DJANGO_CORS_ORIGINS", "").split(",") if o]
