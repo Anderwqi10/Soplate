@@ -154,3 +154,69 @@ def loan_status(states: list[InstallmentState], today: date) -> str:
 def days_overdue(states: list[InstallmentState], today: date) -> int:
     overdue = [s.due_date for s in states if s.status == InstallmentStatus.OVERDUE]
     return (today - min(overdue)).days if overdue else 0
+
+
+# --- Cumplimiento del deudor ---
+
+class Punctuality(models.TextChoices):
+    ON_TIME = "ON_TIME", "A tiempo"
+    LATE = "LATE", "Tarde"
+    NOT_DUE = "NOT_DUE", "Aún no vence"
+
+
+class Rating(models.TextChoices):
+    GOOD = "GOOD", "Buen pagador"
+    REGULAR = "REGULAR", "Regular"
+    RISKY = "RISKY", "Riesgoso"
+    NO_HISTORY = "NO_HISTORY", "Sin historial"
+
+
+@dataclass(frozen=True)
+class InstallmentPunctuality:
+    number: int
+    due_date: date
+    status: str
+    days_late: int
+
+
+def installment_punctuality(installments: Sequence, payments: Sequence[tuple[date, Decimal]],
+                            today: date) -> list[InstallmentPunctuality]:
+    """
+    Una cuota se pagó a tiempo si los pagos hechos hasta su vencimiento alcanzaron para cubrirla
+    (los pagos se aplican en orden, igual que en allocate_payments). Las que aún no vencen no cuentan.
+    """
+    running, paid_by_date = Decimal("0"), []
+    for when, amount in sorted(payments):
+        running += q2(amount)
+        paid_by_date.append((when, running))
+
+    def covered_on(required: Decimal) -> date | None:
+        return next((when for when, total in paid_by_date if total >= required), None)
+
+    result, required = [], Decimal("0")
+    for inst in sorted(installments, key=lambda i: i.number):
+        required += q2(inst.amount)
+        covered = covered_on(required)
+        if inst.due_date >= today:
+            status, late = Punctuality.NOT_DUE, 0
+        elif covered and covered <= inst.due_date:
+            status, late = Punctuality.ON_TIME, 0
+        else:
+            status, late = Punctuality.LATE, ((covered or today) - inst.due_date).days
+        result.append(InstallmentPunctuality(inst.number, inst.due_date, status.value, late))
+    return result
+
+
+def borrower_rating(on_time: int, late: int, has_write_off: bool) -> str:
+    """Buen pagador ≥ 90 % a tiempo; Regular 70–89 %; Riesgoso < 70 % o con alguna pérdida."""
+    if has_write_off:
+        return Rating.RISKY.value
+    counted = on_time + late
+    if counted == 0:
+        return Rating.NO_HISTORY.value
+    share = on_time / counted
+    if share >= 0.9:
+        return Rating.GOOD.value
+    if share >= 0.7:
+        return Rating.REGULAR.value
+    return Rating.RISKY.value

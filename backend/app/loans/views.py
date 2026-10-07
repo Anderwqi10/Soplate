@@ -8,6 +8,7 @@ from core.views import OwnedQuerysetMixin
 from ledger.serializers import OwnedAccountField
 from loans.domain import build_schedule
 from loans.models import Borrower, Loan
+from loans.profile import borrower_profile
 from loans.serializers import (BorrowerSerializer, LoanFilterSerializer, LoanInputSerializer,
                                LoanPreviewInputSerializer,
                                PaymentInputSerializer, loan_detail, loan_list_item, payment_data, schedule_data)
@@ -18,6 +19,10 @@ from loans.services import (create_loan, delete_loan, loans_with_totals, registe
 class BorrowerViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
     queryset = Borrower.objects.all()
     serializer_class = BorrowerSerializer
+
+    @action(detail=True, methods=["get"])
+    def profile(self, request, pk=None):
+        return Response(borrower_profile(self.get_object(), timezone.localdate()))
 
 
 class LoanViewSet(OwnedQuerysetMixin, viewsets.GenericViewSet):
