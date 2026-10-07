@@ -24,3 +24,25 @@ export function normalizeAmount(raw: string): string | null {
   if (/^\d+\.\d{1,2}$/.test(s)) return s; // punto decimal: 20.5
   return null;
 }
+
+/**
+ * Texto que se muestra en un campo de dinero mientras se escribe: "$ 1.000.000,5".
+ * Solo se conservan cifras y una coma (centavos, máximo 2); los puntos de miles se ponen solos.
+ */
+export function formatAmountInput(typed: string): string {
+  const cleaned = typed.replace(/[^\d,]/g, "");
+  if (!cleaned) return "";
+  const commaAt = cleaned.indexOf(",");
+  const rawWhole = commaAt === -1 ? cleaned : cleaned.slice(0, commaAt);
+  const cents = commaAt === -1 ? null : cleaned.slice(commaAt + 1).replace(/,/g, "").slice(0, 2);
+  const whole = rawWhole.replace(/^0+(?=\d)/, "") || "0";
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `$ ${grouped}${cents === null ? "" : `,${cents}`}`;
+}
+
+/** Un monto de la API ("400000.00") listo para editar en un campo de dinero ("$ 400.000"). */
+export function amountToInput(apiAmount: string): string {
+  const [whole, decimals = ""] = apiAmount.replace("-", "").split(".");
+  const cents = decimals.padEnd(2, "0").slice(0, 2);
+  return formatAmountInput(Number(cents) === 0 ? whole : `${whole},${cents}`);
+}

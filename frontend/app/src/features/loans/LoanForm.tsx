@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import type { Frequency, InterestMode, LoanPreviewInput } from "../../api/types";
 import EmptyState from "../../components/EmptyState";
 import ErrorMessage from "../../components/ErrorMessage";
+import MoneyInput from "../../components/MoneyInput";
 import PageHeader from "../../components/PageHeader";
 import { normalizeAmount } from "../../lib/amount";
 import { todayISO } from "../../lib/format";
@@ -140,7 +141,7 @@ export default function LoanForm() {
           </div>
           <label className="field">
             <span>Capital prestado</span>
-            <input className="input tabular" inputMode="decimal" required value={principal} onChange={(e) => setPrincipal(e.target.value)} />
+            <MoneyInput required value={principal} onChange={setPrincipal} />
           </label>
           <label className="field">
             <span>Tasa de interés (%)</span>

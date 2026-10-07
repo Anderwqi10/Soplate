@@ -42,7 +42,7 @@ test("transfer form posts strings and shows backend error", async () => {
     body: { from_account: 1, to_account: 2, amount: "300000", date: todayISO(), description: "" },
   });
   expect(await screen.findByText("No puedes transferir a la misma cuenta.")).toBeInTheDocument();
-  expect(screen.getByLabelText("Monto")).toHaveValue("300000");
+  expect(screen.getByLabelText("Monto")).toHaveValue("$ 300.000");
   expect(onDone).not.toHaveBeenCalled();
 });
 

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { AccountKind } from "../../api/types";
 import ErrorMessage from "../../components/ErrorMessage";
+import MoneyInput from "../../components/MoneyInput";
 import { normalizeAmount } from "../../lib/amount";
 import { ACCOUNT_KIND_LABEL } from "../../lib/status";
 import { useCreateAccount } from "./api";
@@ -34,13 +35,7 @@ export default function AccountForm({ onDone }: { onDone(): void }) {
       </label>
       <label className="field">
         <span>Saldo inicial</span>
-        <input
-          className="input tabular"
-          inputMode="decimal"
-          value={initialBalance}
-          onChange={(e) => setInitialBalance(e.target.value)}
-          placeholder="0"
-        />
+        <MoneyInput value={initialBalance} onChange={setInitialBalance} placeholder="$ 0" />
       </label>
       <div className="grid gap-3 md:col-span-3">
         <ErrorMessage error={create.error} />

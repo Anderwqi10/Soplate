@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
 import type { LoanDetail } from "../../api/types";
 import ErrorMessage from "../../components/ErrorMessage";
+import MoneyInput from "../../components/MoneyInput";
 import { todayISO } from "../../lib/format";
-import { normalizeAmount } from "../../lib/amount";
+import { amountToInput, normalizeAmount } from "../../lib/amount";
 import AccountSelect from "../accounts/AccountSelect";
 import { useAccounts } from "../accounts/api";
 import { useCreatePayment } from "./api";
@@ -41,20 +42,13 @@ export default function PaymentForm({ loan }: { loan: LoanDetail }) {
           Monto
         </label>
         <div className="flex flex-wrap gap-2">
-          <input
-            id="payment-amount"
-            className="input tabular min-w-0 flex-1"
-            inputMode="decimal"
-            required
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+          <MoneyInput id="payment-amount" className="min-w-0 flex-1" required value={amount} onChange={setAmount} />
           {next && (
-            <button type="button" className="btn btn-quiet" onClick={() => setAmount(next.remaining)}>
+            <button type="button" className="btn btn-quiet" onClick={() => setAmount(amountToInput(next.remaining))}>
               Cuota
             </button>
           )}
-          <button type="button" className="btn btn-quiet" onClick={() => setAmount(loan.outstanding)}>
+          <button type="button" className="btn btn-quiet" onClick={() => setAmount(amountToInput(loan.outstanding))}>
             Total
           </button>
         </div>

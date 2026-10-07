@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { ManualTransactionKind } from "../../api/types";
 import ErrorMessage from "../../components/ErrorMessage";
+import MoneyInput from "../../components/MoneyInput";
 import { normalizeAmount } from "../../lib/amount";
 import { todayISO } from "../../lib/format";
 import { TRANSACTION_KIND_LABEL } from "../../lib/status";
@@ -39,7 +40,7 @@ export default function TransactionForm({ onDone, defaultAccount }: { onDone(): 
       </label>
       <label className="field">
         <span>Monto</span>
-        <input className="input tabular" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <MoneyInput required value={amount} onChange={setAmount} />
       </label>
       <label className="field">
         <span>Fecha</span>

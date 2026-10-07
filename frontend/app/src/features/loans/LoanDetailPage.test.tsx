@@ -65,11 +65,11 @@ test("detail renders the cobro card, installments and pays next installment", as
 
   await screen.findAllByRole("option", { name: /Bancolombia/ });
   await userEvent.click(screen.getByRole("button", { name: "Cuota" }));
-  expect(screen.getByLabelText("Monto")).toHaveValue("400000.00");
+  expect(screen.getByLabelText("Monto")).toHaveValue("$ 400.000");
   await userEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
   expect(client.apiFetch).toHaveBeenCalledWith("/loans/7/payments/", {
     method: "POST",
-    body: { amount: "400000.00", date: todayISO(), account: 1, note: "" },
+    body: { amount: "400000", date: todayISO(), account: 1, note: "" },
   });
 });
 
@@ -77,7 +77,7 @@ test("total button fills the outstanding amount", async () => {
   mockApi(detail());
   renderDetail();
   await userEvent.click(await screen.findByRole("button", { name: "Total" }));
-  expect(screen.getByLabelText("Monto")).toHaveValue("800000.00");
+  expect(screen.getByLabelText("Monto")).toHaveValue("$ 800.000");
 });
 
 test("payment error keeps the typed amount", async () => {
@@ -88,7 +88,7 @@ test("payment error keeps the typed amount", async () => {
   vi.mocked(client.apiFetch).mockRejectedValueOnce(new client.ApiError(400, { detail: "El pago supera el saldo pendiente" }));
   await userEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
   expect(await screen.findByText("El pago supera el saldo pendiente")).toBeInTheDocument();
-  expect(screen.getByLabelText("Monto")).toHaveValue("900000");
+  expect(screen.getByLabelText("Monto")).toHaveValue("$ 900.000");
 });
 
 test("payment form hidden when loan is paid", async () => {
@@ -114,6 +114,6 @@ test("if the loan's account was archived, the payment form makes you choose anot
   await userEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
   expect(client.apiFetch).toHaveBeenCalledWith("/loans/7/payments/", {
     method: "POST",
-    body: { amount: "400000.00", date: todayISO(), account: 1, note: "" },
+    body: { amount: "400000", date: todayISO(), account: 1, note: "" },
   });
 });

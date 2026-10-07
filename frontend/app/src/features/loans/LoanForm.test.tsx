@@ -101,7 +101,7 @@ test("create loan error keeps values", async () => {
   await fillForm();
   await userEvent.click(screen.getByRole("button", { name: "Crear préstamo" }));
   expect(await screen.findByText("Saldo insuficiente en la cuenta")).toBeInTheDocument();
-  expect(screen.getByLabelText("Capital prestado")).toHaveValue("1000000");
+  expect(screen.getByLabelText("Capital prestado")).toHaveValue("$ 1.000.000");
 });
 
 test("asks to create an account first", async () => {
@@ -133,16 +133,24 @@ test("amounts typed with thousands dots are understood", async () => {
   }));
 });
 
-test("an invalid amount is explained instead of ignored", async () => {
+test("letters cannot be typed into the capital", async () => {
+  mockApi();
+  renderForm();
+  await screen.findAllByRole("option", { name: /Luis Pérez/ });
+  await userEvent.type(screen.getByLabelText("Capital prestado"), "un millón 5");
+  expect(screen.getByLabelText("Capital prestado")).toHaveValue("$ 5");
+});
+
+test("an invalid rate is explained instead of ignored", async () => {
   mockApi();
   renderForm();
   await screen.findAllByRole("option", { name: /Luis Pérez/ });
   await userEvent.selectOptions(screen.getByLabelText("Deudor"), "4");
   await userEvent.selectOptions(screen.getByLabelText("Cuenta de origen"), "1");
-  await userEvent.type(screen.getByLabelText("Capital prestado"), "un millón");
-  await userEvent.type(screen.getByLabelText("Tasa de interés (%)"), "20");
+  await userEvent.type(screen.getByLabelText("Capital prestado"), "1000000");
+  await userEvent.type(screen.getByLabelText("Tasa de interés (%)"), "veinte");
   await userEvent.type(screen.getByLabelText("Número de cuotas"), "3");
   await userEvent.click(screen.getByRole("button", { name: "Crear préstamo" }));
-  expect(await screen.findByText(/El capital no es un monto válido/)).toBeInTheDocument();
+  expect(await screen.findByText(/La tasa no es válida/)).toBeInTheDocument();
   expect(client.apiFetch).not.toHaveBeenCalledWith("/loans/", expect.anything());
 });
