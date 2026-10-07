@@ -4,6 +4,7 @@ import RequireAuth from "./auth/RequireAuth";
 import Layout from "./components/Layout";
 import AccountDetailPage from "./features/accounts/AccountDetailPage";
 import AccountsPage from "./features/accounts/AccountsPage";
+import BorrowerProfilePage from "./features/borrowers/BorrowerProfilePage";
 import BorrowersPage from "./features/borrowers/BorrowersPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import LoanDetailPage from "./features/loans/LoanDetailPage";
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="accounts/:id" element={<AccountDetailPage />} />
         <Route path="borrowers" element={<BorrowersPage />} />
+        <Route path="borrowers/:id" element={<BorrowerProfilePage />} />
         <Route path="loans" element={<LoansPage />} />
         <Route path="loans/new" element={<LoanForm />} />
         <Route path="loans/:id" element={<LoanDetailPage />} />

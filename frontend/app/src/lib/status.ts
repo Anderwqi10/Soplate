@@ -1,4 +1,4 @@
-import type { AccountKind, Frequency, InstallmentStatus, LoanStatus, TransactionKind } from "../api/types";
+import type { AccountKind, CloseReason, Frequency, InstallmentStatus, LoanStatus, Rating, TransactionKind } from "../api/types";
 
 export type Tone = "green" | "amber" | "red" | "gray";
 
@@ -39,4 +39,17 @@ export const TRANSACTION_KIND_LABEL: Record<TransactionKind, string> = {
   TRANSFER_OUT: "Transferencia enviada",
   LOAN_DISBURSEMENT: "Préstamo entregado",
   LOAN_PAYMENT: "Pago recibido",
+};
+
+export const RATING: Record<Rating, { label: string; tone: Tone }> = {
+  GOOD: { label: "Buen pagador", tone: "green" },
+  REGULAR: { label: "Regular", tone: "amber" },
+  RISKY: { label: "Riesgoso", tone: "red" },
+  NO_HISTORY: { label: "Sin historial", tone: "gray" },
+};
+
+export const CLOSE_REASON_LABEL: Record<CloseReason, string> = {
+  SETTLED: "Liquidado",
+  WRITTEN_OFF: "Pérdida",
+  DELETED: "Eliminado",
 };

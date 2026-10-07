@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../api/client";
-import type { Borrower, BorrowerInput } from "../../api/types";
+import type { Borrower, BorrowerInput, BorrowerProfile } from "../../api/types";
 
 export function useBorrowers() {
   return useQuery({ queryKey: ["borrowers"], queryFn: () => apiFetch<Borrower[]>("/borrowers/") });
@@ -28,4 +28,11 @@ export function useUpdateBorrower(id: number) {
 
 export function useDeleteBorrower() {
   return useBorrowerMutation((id: number) => apiFetch<void>(`/borrowers/${id}/`, { method: "DELETE" }));
+}
+
+export function useBorrowerProfile(id: number) {
+  return useQuery({
+    queryKey: ["borrowers", id, "profile"],
+    queryFn: () => apiFetch<BorrowerProfile>(`/borrowers/${id}/profile/`),
+  });
 }

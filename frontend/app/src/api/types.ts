@@ -194,3 +194,31 @@ export interface PaymentInput {
   account?: number;
   note: string;
 }
+
+export type Rating = "GOOD" | "REGULAR" | "RISKY" | "NO_HISTORY";
+export type CloseReason = "SETTLED" | "WRITTEN_OFF" | "DELETED";
+
+export interface BorrowerProfile {
+  borrower: Borrower;
+  rating: Rating;
+  on_time_count: number;
+  late_count: number;
+  on_time_percent: number | null;
+  avg_days_late: number;
+  total_lent: Money;
+  total_collected: Money;
+  outstanding: Money;
+  losses: Money;
+  loans: {
+    id: number;
+    start_date: ISODate;
+    end_date: ISODate;
+    principal: Money;
+    total_amount: Money;
+    paid_total: Money;
+    outstanding: Money;
+    /** Abiertos: estado calculado. Cerrados: motivo del cierre. */
+    status: LoanStatus | CloseReason;
+    is_open: boolean;
+  }[];
+}

@@ -71,7 +71,9 @@ export default function BorrowersPage() {
           {list.map((b) => (
             <li key={b.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-rule py-4">
               <div className="grid">
-                <span className="font-semibold">{b.full_name}</span>
+                <Link to={`/borrowers/${b.id}`} className="font-semibold underline-offset-4 hover:underline">
+                  {b.full_name}
+                </Link>
                 <span className="text-sm text-muted">
                   {[b.document_id && `Doc. ${b.document_id}`, b.phone].filter(Boolean).join(", ") || "Sin datos de contacto"}
                 </span>

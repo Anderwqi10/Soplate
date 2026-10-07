@@ -57,3 +57,9 @@ test("borrower delete error is shown", async () => {
   expect(await screen.findByText("No se puede eliminar: tiene movimientos o registros asociados.")).toBeInTheDocument();
   expect(screen.getByText("Luis Pérez")).toBeInTheDocument();
 });
+
+test("each borrower's name opens their profile", async () => {
+  vi.mocked(client.apiFetch).mockResolvedValue([luis]);
+  renderWithProviders(<BorrowersPage />);
+  expect(await screen.findByRole("link", { name: "Luis Pérez" })).toHaveAttribute("href", "/borrowers/1");
+});
