@@ -9,6 +9,9 @@ function Terminar($codigo) {
     exit $codigo
 }
 
+# Cualquier error inesperado: mostrarlo y esperar antes de cerrar la ventana.
+trap { Write-Host "Error inesperado: $_"; Terminar 1 }
+
 . (Join-Path $PSScriptRoot "soplate-comun.ps1")
 # Solo se detiene un proceso confirmado como Soplate; si no, se limpia el PID viejo.
 $pidGuardado = Get-SoplatePid

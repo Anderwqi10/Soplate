@@ -72,7 +72,8 @@ def pg_dump_to(path: Path) -> None:
            "--port", str(db.get("PORT") or "5432"), "--username", str(db.get("USER", "")), str(db["NAME"])]
     env = {**os.environ, "PGPASSWORD": str(db.get("PASSWORD", ""))}
     try:
-        proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=600)
+        proc = subprocess.run(cmd, env=env, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=600)
     except FileNotFoundError:
         raise BackupError("No se encontró el programa pg_dump. Revisa PG_BIN_DIR en backend/app/.env.") from None
     except subprocess.TimeoutExpired:

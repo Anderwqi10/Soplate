@@ -25,7 +25,13 @@ def test_missing_build_explains_what_to_do(client, tmp_path, settings):
     settings.FRONTEND_DIST = tmp_path
     response = client.get("/")
     assert response.status_code == 503
-    assert response.content.decode() == "Falta compilar la app: ejecuta scripts\publicar.ps1"
+    assert response.content.decode() == "Falta compilar la app: ejecuta scripts\\publicar.ps1"
+
+
+def test_missing_asset_is_404_not_index(client, built_frontend):
+    response = client.get("/assets/index-viejo.js")
+    assert response.status_code == 404
+    assert 'id="root"' not in response.content.decode()
 
 
 def test_manifest_is_served_with_manifest_mime_type(built_frontend, settings):

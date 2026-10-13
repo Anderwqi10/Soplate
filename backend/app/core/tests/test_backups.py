@@ -66,6 +66,14 @@ def test_pg_dump_missing_program_is_explained(tmp_path, monkeypatch):
         pg_dump_to(tmp_path / "x.dump")
 
 
+def test_pg_dump_output_is_decoded_tolerantly(tmp_path):
+    done = mock.Mock(returncode=0, stderr="")
+    with mock.patch("core.backups.subprocess.run", return_value=done) as run:
+        pg_dump_to(tmp_path / "x.dump")
+    assert run.call_args.kwargs["encoding"] == "utf-8"
+    assert run.call_args.kwargs["errors"] == "replace"
+
+
 def test_backup_command_never_blocks_start(tmp_path, monkeypatch):
     monkeypatch.setenv("BACKUP_DIR", str(tmp_path))
     monkeypatch.delenv("BACKUP_USB_DIR", raising=False)

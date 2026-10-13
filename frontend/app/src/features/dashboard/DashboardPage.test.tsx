@@ -82,6 +82,12 @@ test("reminds you when there are no USB backups yet", async () => {
   expect(await screen.findByRole("status")).toHaveTextContent(/^Aún no hay copias en el USB\.$/);
 });
 
+test("an unreadable USB backup date never shows NaN", async () => {
+  vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: "no-es-una-fecha" }));
+  renderWithProviders(<DashboardPage />);
+  expect(await screen.findByRole("status")).toHaveTextContent(/^Aún no hay copias en el USB\.$/);
+});
+
 test("reminds you when the last USB backup is 9 days old", async () => {
   vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: daysAgo(9) }));
   renderWithProviders(<DashboardPage />);

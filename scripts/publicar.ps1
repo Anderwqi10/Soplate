@@ -37,6 +37,7 @@ try {
         Write-Host "2/3 Juntando archivos estáticos (collectstatic)..."
         & $python manage.py collectstatic --noinput
         if ($LASTEXITCODE -ne 0) { throw "Falló collectstatic." }
+        & $python manage.py backup_db
         Write-Host "3/3 Aplicando migraciones en la base 'soplate'..."
         & $python manage.py migrate
         if ($LASTEXITCODE -ne 0) { throw "Falló migrate." }

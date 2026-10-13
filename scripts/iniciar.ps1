@@ -16,6 +16,9 @@ function Terminar($codigo) {
     exit $codigo
 }
 
+# Cualquier error inesperado: mostrarlo y esperar antes de cerrar la ventana.
+trap { Write-Host "Error inesperado: $_"; Terminar 1 }
+
 . (Join-Path $PSScriptRoot "soplate-comun.ps1")
 $pidVivo = Get-SoplatePid
 if ($pidVivo) {

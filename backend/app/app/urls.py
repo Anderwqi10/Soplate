@@ -12,7 +12,7 @@ urlpatterns = [
     path("api/", include("ledger.urls")),
     path("api/", include("loans.urls")),
     path("api/", include("reports.urls")),
-    re_path(r"^(?!api/|admin/|static/).*$", frontend_index),
+    re_path(r"^(?!api/|admin/|static/|assets/).*$", frontend_index),
 ]
 
 handler404 = api_not_found

@@ -183,6 +183,15 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
+# Errores del servidor (500) siempre a stderr, también en modo de uso (DEBUG=false).
+# Waitress manda stderr a scripts\soplate.err.log.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"stderr": {"class": "logging.StreamHandler"}},
+    "loggers": {"django": {"handlers": ["stderr"], "level": "ERROR"}},
+}
+
 # Orígenes desde los que el frontend puede llamar a la API.
 # Desarrollo: el computador y cualquier equipo de la red local (192.168.x.x, 10.x.x.x).
 # Producción: los de DJANGO_CORS_ORIGINS, separados por coma.

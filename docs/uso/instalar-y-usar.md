@@ -2,7 +2,7 @@
 
 Soplate corre en tu computador. Tú lo inicias cuando lo necesitas y lo detienes cuando terminas. Desde el celular entras por Tailscale, que es una conexión privada y segura entre tu celular y tu computador.
 
-Las partes 1 a 6 se hacen **una sola vez**. La parte 7 es el uso de todos los días.
+Las partes 1 a 6 (y el archivo `.env`, justo después de la parte 1) se hacen **una sola vez**. La parte 7 es el uso de todos los días.
 
 ## 1. Crear la base de datos real (una sola vez)
 
@@ -16,6 +16,24 @@ La base `soplate` guarda tus datos reales. La base `soplate_dev` es solo para pr
    ```
 
 3. Escribe esa misma contraseña en `backend\app\.env` (línea `DATABASE_PASSWORD`).
+
+### Crear el archivo `.env` (una sola vez, también si cambias de computador)
+
+El archivo `backend\app\.env` guarda tus claves y rutas. No se sube a internet. Si no existe, créalo así:
+
+1. Copia `backend\app\.env.example` y llama a la copia `backend\app\.env`.
+2. Genera una clave secreta para Soplate. En PowerShell, en la carpeta del proyecto:
+
+   ```powershell
+   backend\venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(50))"
+   ```
+
+3. Abre `.env` con el Bloc de notas y pega esa clave después de `DJANGO_SECRET_KEY=`.
+4. En el mismo archivo completa estas líneas con tus rutas reales:
+   - `BACKUP_DIR`: carpeta del computador donde se guardan las copias.
+   - `BACKUP_USB_DIR`: carpeta de copias dentro del USB (por ejemplo `E:\soplate-backups`).
+   - `PG_BIN_DIR`: carpeta de PostgreSQL que tiene `pg_dump` (por ejemplo `C:\Program Files\PostgreSQL\17\bin`).
+5. Crea la carpeta de copias en el USB (por ejemplo `E:\soplate-backups`). Soplate **no** la crea sola: si el USB es nuevo o lo cambiaste, sin esa carpeta no se guarda copia en el USB y verás el mismo mensaje de "USB no disponible" que cuando está desconectado.
 
 ## 2. Cambiar la contraseña de `postgres`
 
