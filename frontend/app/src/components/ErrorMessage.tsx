@@ -17,7 +17,7 @@ export default function ErrorMessage({ error }: { error: unknown }) {
   const message = isApi
     ? fields.length > 0 ? "Revisa los datos marcados." : error.message
     : error instanceof TypeError
-      ? "No se pudo conectar con el servidor. Revisa que el backend esté encendido."
+      ? "No se pudo conectar con tu computador. Revisa que Tailscale esté activo en el celular y que Soplate esté iniciado en el computador."
       : "Algo salió mal. Recarga la página e intenta de nuevo.";
 
   return (
