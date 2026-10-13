@@ -67,6 +67,7 @@ export default function LoanActions({ loan }: { loan: LoanDetail }) {
           title={`¿Liquidar el préstamo de ${who}?`}
           confirmLabel="Sí, liquidar"
           pending={settle.isPending}
+          confirmDisabled={account === ""}
           error={settle.error}
           onCancel={close}
           onConfirm={() => account !== "" && settle.mutate(account, { onSuccess: () => leave(`El préstamo de ${who} se liquidó.`) })}
@@ -76,6 +77,7 @@ export default function LoanActions({ loan }: { loan: LoanDetail }) {
             y el préstamo desaparecerá de la lista.
           </p>
           <AccountSelect label="Cuenta donde entra el dinero" value={account} onChange={setAccount} />
+          {account === "" && <p className="mt-2 text-red">Elige la cuenta donde entra el dinero.</p>}
         </ConfirmBox>
       )}
 

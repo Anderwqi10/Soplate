@@ -28,9 +28,9 @@ function loan(status: LoanStatus, outstanding = "800000.00"): LoanDetail {
   };
 }
 
-function setup(status: LoanStatus, outstanding?: string) {
+function setup(status: LoanStatus, outstanding?: string, accountList: Account[] = accounts) {
   vi.mocked(client.apiFetch).mockImplementation(async (path: string) => {
-    if (path === "/accounts/") return accounts;
+    if (path === "/accounts/") return accountList;
     if (path === "/loans/") return [];
     return { id: 7, close_reason: "X", written_off_amount: null };
   });
@@ -107,4 +107,16 @@ test("a backend refusal is shown and nothing changes", async () => {
   vi.mocked(client.apiFetch).mockRejectedValueOnce(new client.ApiError(400, { detail: "Solo se puede eliminar un préstamo pagado." }));
   await userEvent.click(screen.getByRole("button", { name: "Sí, eliminar" }));
   expect(await screen.findByText("Solo se puede eliminar un préstamo pagado.")).toBeInTheDocument();
+});
+
+test("settling needs an account: with the loan's account archived the button waits for a choice", async () => {
+  const other: Account = { ...accounts[0], id: 2, name: "Nequi" };
+  setup("ACTIVE", undefined, [{ ...accounts[0], is_active: false }, other]);
+  await userEvent.click(screen.getByRole("button", { name: "Liquidar préstamo" }));
+  await screen.findAllByRole("option", { name: /Nequi/ });
+  expect(screen.getByText("Elige la cuenta donde entra el dinero.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Sí, liquidar" })).toBeDisabled();
+  await userEvent.selectOptions(screen.getByLabelText("Cuenta donde entra el dinero"), "2");
+  expect(screen.queryByText("Elige la cuenta donde entra el dinero.")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Sí, liquidar" })).toBeEnabled();
 });

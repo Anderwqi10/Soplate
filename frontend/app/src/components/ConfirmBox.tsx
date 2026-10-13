@@ -11,10 +11,12 @@ interface Props {
   pending?: boolean;
   error?: unknown;
   danger?: boolean;
+  /** Bloquea el botón de confirmar (por ejemplo, falta elegir algo). */
+  confirmDisabled?: boolean;
 }
 
 /** Segundo paso obligatorio antes de una acción que no se puede deshacer. */
-export default function ConfirmBox({ title, children, confirmLabel, onConfirm, onCancel, pending, error, danger }: Props) {
+export default function ConfirmBox({ title, children, confirmLabel, onConfirm, onCancel, pending, error, danger, confirmDisabled }: Props) {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   // El foco empieza en "volver": confirmar exige un movimiento deliberado.
@@ -36,7 +38,7 @@ export default function ConfirmBox({ title, children, confirmLabel, onConfirm, o
         <button
           type="button"
           className={`btn ${danger ? "bg-red text-paper" : "btn-primary"}`}
-          disabled={pending}
+          disabled={pending || confirmDisabled}
           onClick={onConfirm}
         >
           {confirmLabel}
