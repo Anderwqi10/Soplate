@@ -124,9 +124,7 @@ test("amounts typed with thousands dots are understood", async () => {
   await screen.findAllByRole("option", { name: /Luis Pérez/ });
   await userEvent.selectOptions(screen.getByLabelText("Deudor"), "4");
   await userEvent.selectOptions(screen.getByLabelText("Cuenta de origen"), "1");
-  // Pegado: teclear "1.000." tecla por tecla es ambiguo con "1.000" + decimal, y gana el decimal.
-  await userEvent.click(screen.getByLabelText("Capital prestado"));
-  await userEvent.paste("1.000.000");
+  await userEvent.type(screen.getByLabelText("Capital prestado"), "1.000.000");
   await userEvent.type(screen.getByLabelText("Tasa de interés (%)"), "20");
   await userEvent.type(screen.getByLabelText("Número de cuotas"), "3");
   await screen.findByRole("region", { name: "Vista previa" });

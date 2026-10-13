@@ -23,31 +23,60 @@ export function normalizeAmount(raw: string): string | null {
   if (/^\d+$/.test(s)) return s;
   if (THOUSANDS.test(s)) return s.replace(/\./g, "");
   if (/^\d+\.\d{1,2}$/.test(s)) return s; // punto decimal: 20.5
+  const decimalAfterThousands = /^(\d{1,3}(?:\.\d{3})+)\.(\d{1,2})$/.exec(s); // 1.500.50
+  if (decimalAfterThousands) return `${decimalAfterThousands[1].replace(/\./g, "")}.${decimalAfterThousands[2]}`;
+  if (/^(\d+|\d{1,3}(\.\d{3})+)\.$/.test(s)) return s.slice(0, -1).replace(/\./g, ""); // "1.000." -> 1000
   return null;
+}
+
+const group = (whole: string) => whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+/**
+ * Un texto sin coma que termina en "." o en un grupo de 1-2 cifras tras el último punto ("1.500.",
+ * "1.500.5", "1500.50") todavía no se sabe si es decimal: se deja provisional hasta terminar.
+ * Con un grupo final de 3 cifras o más son puntos de miles y se reagrupa como entero.
+ */
+function parseProvisional(text: string): { whole: string; frac: string } | null {
+  if (text.includes(",")) return null;
+  const t = text.replace(/[^\d.]/g, "");
+  if (!t.includes(".")) return null;
+  const groups = t.split(".");
+  const frac = groups.pop() as string;
+  if (frac.length > 2) return null;
+  const [first, ...rest] = groups;
+  if (rest.some((g) => g.length !== 3)) return null;
+  if (first === "" && groups.length > 1) return null;
+  return { whole: groups.join(""), frac };
 }
 
 /**
  * Texto que se muestra en un campo de dinero mientras se escribe: "$ 1.000.000,5".
  * Solo se conservan cifras y una coma (centavos, máximo 2); los puntos de miles se ponen solos.
+ * Un punto final queda provisional ("$ 1.500.50") hasta que finalizeAmountInput lo decide.
+ * `previous` (lo que se veía antes de la tecla) distingue borrar una cifra de "$ 10.000".
  */
 export function formatAmountInput(typed: string, previous?: string): string {
-  // Un punto seguido de 0-2 cifras al final es el separador decimal (teclado del celular); los
-  // puntos de miles (grupos de 3) se ignoran y se vuelven a poner solos. `previous` (lo que se
-  // veía antes de la tecla) evita confundir: al borrar ("$ 10.00" viene de "$ 10.000") o al
-  // escribir un punto suelto tras 1-3 cifras ("1" y luego "." de "1.000") el punto es de miles.
+  const prov = parseProvisional(typed);
   const isDeletion = previous !== undefined && typed.length < previous.length;
-  const isLoneDotAfterFewDigits =
-    previous !== undefined && /^\d{1,3}\.$/.test(typed.replace(/^\$\s*/, ""));
-  const dotIsDecimal = !typed.includes(",") && !isDeletion && !isLoneDotAfterFewDigits;
-  const withComma = dotIsDecimal ? typed.replace(/\.(\d{0,2})$/, ",$1") : typed;
-  const cleaned = withComma.replace(/[^\d,]/g, "");
+  if (prov && !(isDeletion && parseProvisional(previous) === null)) {
+    const whole = prov.whole.replace(/^0+(?=\d)/, "") || "0";
+    return `$ ${group(whole)}.${prov.frac}`;
+  }
+  const cleaned = typed.replace(/[^\d,]/g, "");
   if (!cleaned) return "";
   const commaAt = cleaned.indexOf(",");
   const rawWhole = commaAt === -1 ? cleaned : cleaned.slice(0, commaAt);
   const cents = commaAt === -1 ? null : cleaned.slice(commaAt + 1).replace(/,/g, "").slice(0, 2);
   const whole = rawWhole.replace(/^0+(?=\d)/, "") || "0";
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `$ ${grouped}${cents === null ? "" : `,${cents}`}`;
+  return `$ ${group(whole)}${cents === null ? "" : `,${cents}`}`;
+}
+
+/** Al terminar de escribir (blur): el punto provisional pasa a coma decimal, o se descarta si está solo. */
+export function finalizeAmountInput(shown: string): string {
+  const prov = parseProvisional(shown);
+  if (!prov) return shown;
+  const whole = prov.whole.replace(/^0+(?=\d)/, "") || "0";
+  return `$ ${group(whole)}${prov.frac ? `,${prov.frac}` : ""}`;
 }
 
 /** Un monto de la API ("400000.00") listo para editar en un campo de dinero ("$ 400.000"). */

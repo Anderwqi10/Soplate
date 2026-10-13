@@ -1,4 +1,4 @@
-import { amountToInput, formatAmountInput, normalizeAmount } from "./amount";
+import { amountToInput, finalizeAmountInput, formatAmountInput, normalizeAmount } from "./amount";
 
 test("accepts amounts written the Colombian way", () => {
   expect(normalizeAmount("1.000.000")).toBe("1000000");
@@ -40,25 +40,30 @@ describe("formatAmountInput (lo que se ve mientras se escribe)", () => {
     ["abc12", "$ 12"], // letras ignoradas
     ["$ ", ""], // se borró todo
     ["", ""],
-    ["1500.50", "$ 1.500,50"], // punto decimal (teclado del celular)
-    ["20.5", "$ 20,5"],
-    ["1500.", "$ 1.500,"],
+    ["1500.50", "$ 1.500.50"], // provisional: el punto se decide al terminar (blur / enviar)
+    ["20.5", "$ 20.5"],
+    ["1500.", "$ 1.500."],
+    ["$ 1.500.5", "$ 1.500.5"],
+    ["$ 1.000.000", "$ 1.000.000"],
+    ["$ 1.000.0000", "$ 10.000.000"],
     ["$ 1.000.000", "$ 1.000.000"], // puntos de miles se conservan
   ])("%j se muestra como %j", (typed, shown) => {
     expect(formatAmountInput(typed)).toBe(shown);
   });
 
-  test("with the previous text, deleting or a lone dot after few digits keep dots as thousands", () => {
+  test("deleting a thousands digit regroups; deleting inside a provisional decimal keeps it", () => {
     expect(formatAmountInput("$ 10.00", "$ 10.000")).toBe("$ 1.000");
-    expect(formatAmountInput("$ 1.", "$ 1")).toBe("$ 1");
-    expect(formatAmountInput("$ 1500.", "$ 1500")).toBe("$ 1.500,");
-    expect(formatAmountInput("$ 1.500.", "$ 1.500")).toBe("$ 1.500,"); // previous tal como lo muestra el campo
+    expect(formatAmountInput("$ 1.500.5", "$ 1.500.50")).toBe("$ 1.500.5");
+    expect(formatAmountInput("$ 1.500.", "$ 1.500.5")).toBe("$ 1.500.");
   });
 
   test("the displayed text converts back to what the API expects", () => {
     expect(normalizeAmount(formatAmountInput("1000000,5"))).toBe("1000000.5");
     expect(normalizeAmount(formatAmountInput("250000"))).toBe("250000");
     expect(normalizeAmount(formatAmountInput("1500.50"))).toBe("1500.50");
+    expect(normalizeAmount("$ 1.500.50")).toBe("1500.50");
+    expect(normalizeAmount("$ 1.000.")).toBe("1000");
+    expect(normalizeAmount("$ 1.000.000")).toBe("1000000");
   });
 });
 
@@ -66,4 +71,13 @@ test("amountToInput shows an API amount ready to edit", () => {
   expect(amountToInput("400000.00")).toBe("$ 400.000");
   expect(amountToInput("33.30")).toBe("$ 33,30");
   expect(amountToInput("1000000.5")).toBe("$ 1.000.000,50");
+});
+
+test("finalizeAmountInput decides the provisional dot", () => {
+  expect(finalizeAmountInput("$ 1.500.50")).toBe("$ 1.500,50");
+  expect(finalizeAmountInput("$ 20.5")).toBe("$ 20,5");
+  expect(finalizeAmountInput("$ 1.000.")).toBe("$ 1.000");
+  expect(finalizeAmountInput("$ 1.000.000")).toBe("$ 1.000.000");
+  expect(finalizeAmountInput("$ 2.500,75")).toBe("$ 2.500,75");
+  expect(finalizeAmountInput("")).toBe("");
 });

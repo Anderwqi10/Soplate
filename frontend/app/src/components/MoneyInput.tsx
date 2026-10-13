@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type InputHTMLAttributes } from "react";
-import { formatAmountInput } from "../lib/amount";
+import { finalizeAmountInput, formatAmountInput } from "../lib/amount";
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> & {
   /** Texto mostrado, ya formateado ("$ 1.000.000"). Se convierte con normalizeAmount al enviar. */
@@ -20,7 +20,7 @@ function positionAfter(text: string, count: number): number {
 }
 
 /** Campo de dinero: pone "$" y los puntos de miles mientras se escribe, sin que el cursor salte. */
-export default function MoneyInput({ value, onChange, className = "", ...rest }: Props) {
+export default function MoneyInput({ value, onChange, onBlur, className = "", ...rest }: Props) {
   const ref = useRef<HTMLInputElement>(null);
   const pendingCaret = useRef<number | null>(null);
 
@@ -41,6 +41,11 @@ export default function MoneyInput({ value, onChange, className = "", ...rest }:
       autoComplete="off"
       className={`input tabular ${className}`}
       value={value}
+      onBlur={(e) => {
+        const final = finalizeAmountInput(value);
+        if (final !== value) onChange(final);
+        onBlur?.(e);
+      }}
       onChange={(e) => {
         const typed = e.target.value;
         const caret = e.target.selectionStart ?? typed.length;
