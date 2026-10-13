@@ -79,3 +79,16 @@ def test_reports_isolated_per_user(other_api, loan_factory):
     loan_factory()
     d = other_api.get("/api/reports/dashboard/").json()
     assert d["total_balance"] == "0.00" and set(d["loans_by_status"].values()) == {0}
+
+
+def test_dashboard_last_usb_backup_none_without_records(user):
+    assert dashboard(user, today=date(2026, 3, 1))["last_usb_backup_at"] is None
+
+
+def test_dashboard_last_usb_backup_is_latest_usb_record(user):
+    from core.models import BackupRecord
+
+    BackupRecord.objects.create(destination="LOCAL", path="a")
+    usb = BackupRecord.objects.create(destination="USB", path="b")
+    d = dashboard(user, today=date(2026, 3, 1))
+    assert d["last_usb_backup_at"] == usb.created_at.isoformat()

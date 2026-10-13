@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from core.exceptions import BusinessError
+from core.models import BackupRecord
 from core.money import money_str, q2
 from ledger.models import Account
 from loans.domain import InstallmentStatus, LoanStatus
@@ -46,7 +47,10 @@ def dashboard(owner, today: date) -> dict:
             elif inst.status != InstallmentStatus.PAID and today <= inst.due_date <= horizon:
                 upcoming.append(row)
 
+    last_usb = BackupRecord.objects.filter(destination=BackupRecord.Destination.USB).first()
+
     return {
+        "last_usb_backup_at": last_usb.created_at.isoformat() if last_usb else None,
         "total_balance": money_str(total_balance),
         "outstanding_total": money_str(outstanding),
         "outstanding_principal": money_str(outstanding_principal),

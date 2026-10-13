@@ -4,7 +4,7 @@ import type { DueRow, LoanStatus } from "../../api/types";
 import ErrorMessage from "../../components/ErrorMessage";
 import PageHeader from "../../components/PageHeader";
 import StatusBadge from "../../components/StatusBadge";
-import { formatDate, formatMoney } from "../../lib/format";
+import { daysSince, formatDate, formatMoney } from "../../lib/format";
 import { useDashboard } from "./api";
 
 const STATUS_ORDER: LoanStatus[] = ["ACTIVE", "OVERDUE", "DEFAULTED", "PAID"];
@@ -48,12 +48,24 @@ function DueList({ rows, empty, overdue = false }: { rows: (DueRow & { days_over
   );
 }
 
+const BACKUP_REMINDER_DAYS = 7;
+const BACKUP_TIP = "Conecta el USB y reinicia Soplate para hacer una copia.";
+
+/** Aviso de copia de seguridad: solo aparece si nunca hubo copia en el USB o ya pasó más de una semana. */
+function backupReminder(lastUsb: string | null): string | null {
+  if (lastUsb === null) return `Aún no hay copias en el USB. ${BACKUP_TIP}`;
+  const days = daysSince(lastUsb);
+  if (days <= BACKUP_REMINDER_DAYS) return null;
+  return `Tu última copia en el USB fue hace ${days} días. ${BACKUP_TIP}`;
+}
+
 export default function DashboardPage() {
   const query = useDashboard();
 
   if (query.isPending) return <p className="text-muted">Cargando resumen…</p>;
   if (query.isError) return <ErrorMessage error={query.error} />;
   const d = query.data;
+  const reminder = backupReminder(d.last_usb_backup_at);
 
   return (
     <>
@@ -67,6 +79,11 @@ export default function DashboardPage() {
       />
 
       <div className="grid gap-6">
+        {reminder && (
+          <p role="status" className="rounded-xl border border-rule bg-sheet px-4 py-3 text-sm">
+            {reminder}
+          </p>
+        )}
         {/*
           Balance general en la banda azul noche, el único elemento llamativo de la página.
           Celular: el patrimonio primero y en grande. Escritorio: la suma completa

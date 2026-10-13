@@ -136,6 +136,7 @@ export interface Dashboard {
   loans_by_status: Record<LoanStatus, number>;
   upcoming: DueRow[];
   overdue: (DueRow & { days_overdue: number })[];
+  last_usb_backup_at: string | null;
 }
 
 export interface Projection {

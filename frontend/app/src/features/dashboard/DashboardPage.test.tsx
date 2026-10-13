@@ -17,7 +17,7 @@ function dashboard(overrides: Partial<Dashboard> = {}): Dashboard {
     interest_earned: "100000.00", net_worth: "1200000.00", losses_total: "0.00",
     accounts: [{ id: 1, name: "Bancolombia", balance: "600000.00" }],
     loans_by_status: { ACTIVE: 1, OVERDUE: 0, DEFAULTED: 0, PAID: 0 },
-    upcoming: [], overdue: [], ...overrides,
+    upcoming: [], overdue: [], last_usb_backup_at: new Date().toISOString(), ...overrides,
   };
 }
 
@@ -70,4 +70,27 @@ test("reported losses are shown", async () => {
   vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ losses_total: "350000.00" }));
   renderWithProviders(<DashboardPage />);
   expect(n((await screen.findByTestId("losses_total")).textContent)).toBe("$ 350.000");
+});
+
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}
+
+test("reminds you when there are no USB backups yet", async () => {
+  vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: null }));
+  renderWithProviders(<DashboardPage />);
+  expect(await screen.findByRole("status")).toHaveTextContent("Aún no hay copias en el USB.");
+});
+
+test("reminds you when the last USB backup is 9 days old", async () => {
+  vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: daysAgo(9) }));
+  renderWithProviders(<DashboardPage />);
+  expect(await screen.findByRole("status")).toHaveTextContent("Tu última copia en el USB fue hace 9 días.");
+});
+
+test("no reminder when the last USB backup is 2 days old", async () => {
+  vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: daysAgo(2) }));
+  renderWithProviders(<DashboardPage />);
+  await screen.findByTestId("net_worth");
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });

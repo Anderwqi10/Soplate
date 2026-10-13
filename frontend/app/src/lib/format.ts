@@ -39,3 +39,12 @@ export function addDaysISO(iso: ISODate, days: number): ISODate {
   date.setDate(date.getDate() + days);
   return toISODate(date);
 }
+
+/** Días enteros (calendario local) desde un instante ISO 8601 hasta hoy. */
+export function daysSince(isoDateTime: string): number {
+  const then = new Date(isoDateTime);
+  const start = new Date(then.getFullYear(), then.getMonth(), then.getDate());
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000);
+}
