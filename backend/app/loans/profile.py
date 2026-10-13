@@ -21,7 +21,9 @@ def borrower_profile(borrower: Borrower, today: date) -> dict:
     for loan in loans:
         summary = summarize_loan(loan, today)
         payments = [(p.date, p.amount) for p in loan.payments.all()]
-        for p in installment_punctuality(loan.installments.all(), payments, today):
+        # Un préstamo cerrado se evalúa a la fecha de cierre: no sigue "atrasándose" después.
+        as_of = today if loan.closed_at is None else min(today, loan.closed_at)
+        for p in installment_punctuality(loan.installments.all(), payments, as_of):
             if p.status == Punctuality.ON_TIME:
                 on_time += 1
             elif p.status == Punctuality.LATE:

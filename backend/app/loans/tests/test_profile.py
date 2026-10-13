@@ -87,3 +87,12 @@ def test_api_profile_and_isolation(api, other_api, borrower, loan_factory):
     assert r.status_code == 200
     assert r.json()["borrower"]["full_name"] == "Luis Pérez" and len(r.json()["loans"]) == 1
     assert other_api.get(f"/api/borrowers/{borrower.id}/profile/").status_code == 404
+
+
+@pytest.mark.django_db
+def test_written_off_loan_punctuality_is_frozen_at_close(user, borrower, loan_factory):
+    loan = loan_factory()  # cuotas: 28-feb, 31-mar, 30-abr
+    write_off_loan(owner=user, loan=loan, today=date(2026, 3, 5))  # solo la de febrero estaba vencida
+    later = borrower_profile(borrower, today=date(2026, 10, 1))
+    assert (later["late_count"], later["avg_days_late"]) == (1, 5)
+    assert later == borrower_profile(borrower, today=date(2026, 3, 5))
