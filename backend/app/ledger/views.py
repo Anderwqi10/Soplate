@@ -29,7 +29,7 @@ class AccountViewSet(OwnedQuerysetMixin, viewsets.ModelViewSet):
 class TransactionViewSet(OwnedQuerysetMixin, mixins.ListModelMixin, mixins.CreateModelMixin,
                          viewsets.GenericViewSet):
     # Los movimientos de cuentas eliminadas salen del historial (los saldos de las demás no cambian).
-    queryset = Transaction.objects.select_related("account").filter(account__deleted_at__isnull=True)
+    queryset = Transaction.objects.select_related("account", "loan").filter(account__deleted_at__isnull=True)
     serializer_class = TransactionSerializer
 
     def get_queryset(self):

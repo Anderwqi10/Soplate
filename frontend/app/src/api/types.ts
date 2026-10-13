@@ -38,6 +38,7 @@ export interface Transaction {
   date: ISODate;
   description: string;
   loan: number | null;
+  loan_open: boolean; // false si no hay préstamo o ya se cerró (su página no existe)
   transfer_group: string | null;
   created_at: string;
 }

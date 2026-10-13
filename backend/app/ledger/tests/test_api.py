@@ -64,3 +64,20 @@ def test_initial_balance_not_editable_after_create(api, account):
     api.patch(f"/api/accounts/{account.id}/", {"initial_balance": "5", "name": "Banco X"}, format="json")
     account.refresh_from_db()
     assert account.initial_balance == 1000000 and account.name == "Banco X"
+
+
+def test_transaction_says_whether_its_loan_is_still_open(api, loan_factory, user):
+    from datetime import date
+    from decimal import Decimal
+
+    from loans.services import write_off_loan
+
+    open_loan = loan_factory(principal=Decimal("400000"))
+    closed_loan = loan_factory(principal=Decimal("400000"))
+    write_off_loan(owner=user, loan=closed_loan, today=date(2026, 6, 1))
+    rows = api.get("/api/transactions/").json()
+    by_loan = {r["loan"]: r["loan_open"] for r in rows if r["loan"]}
+    assert by_loan == {open_loan.id: True, closed_loan.id: False}
+    manual = api.post("/api/transactions/", {"account": open_loan.account_id, "kind": "DEPOSIT", "amount": "10",
+                                             "date": "2026-01-05"}, format="json").json()
+    assert manual["loan"] is None and manual["loan_open"] is False

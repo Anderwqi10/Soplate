@@ -126,7 +126,7 @@ export default function AccountDetailPage() {
                     <td className="py-3 pr-4">
                       <span className="block">{TRANSACTION_KIND_LABEL[tx.kind]}</span>
                       {tx.description && <span className="block text-sm text-muted">{tx.description}</span>}
-                      {tx.loan && (
+                      {tx.loan_open && (
                         <Link to={`/loans/${tx.loan}`} className="text-sm link">
                           Ver préstamo
                         </Link>

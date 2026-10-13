@@ -35,12 +35,17 @@ class AccountSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     account_name = serializers.CharField(source="account.name", read_only=True)
+    loan_open = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
         fields = ["id", "account", "account_name", "kind", "amount", "date", "description",
-                  "loan", "transfer_group", "created_at"]
+                  "loan", "loan_open", "transfer_group", "created_at"]
         read_only_fields = fields
+
+    def get_loan_open(self, tx) -> bool:
+        """El préstamo existe y sigue abierto (los cerrados ya no tienen página)."""
+        return tx.loan_id is not None and tx.loan.closed_at is None
 
 
 class TransactionInputSerializer(serializers.Serializer):
