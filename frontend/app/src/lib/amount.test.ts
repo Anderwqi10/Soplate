@@ -52,6 +52,7 @@ describe("formatAmountInput (lo que se ve mientras se escribe)", () => {
     expect(formatAmountInput("$ 10.00", "$ 10.000")).toBe("$ 1.000");
     expect(formatAmountInput("$ 1.", "$ 1")).toBe("$ 1");
     expect(formatAmountInput("$ 1500.", "$ 1500")).toBe("$ 1.500,");
+    expect(formatAmountInput("$ 1.500.", "$ 1.500")).toBe("$ 1.500,"); // previous tal como lo muestra el campo
   });
 
   test("the displayed text converts back to what the API expects", () => {

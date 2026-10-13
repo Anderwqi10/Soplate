@@ -37,7 +37,7 @@ export function formatAmountInput(typed: string, previous?: string): string {
   // escribir un punto suelto tras 1-3 cifras ("1" y luego "." de "1.000") el punto es de miles.
   const isDeletion = previous !== undefined && typed.length < previous.length;
   const isLoneDotAfterFewDigits =
-    previous !== undefined && /(^|\D)\d{1,3}\.$/.test(typed.replace(/^\$\s*/, ""));
+    previous !== undefined && /^\d{1,3}\.$/.test(typed.replace(/^\$\s*/, ""));
   const dotIsDecimal = !typed.includes(",") && !isDeletion && !isLoneDotAfterFewDigits;
   const withComma = dotIsDecimal ? typed.replace(/\.(\d{0,2})$/, ",$1") : typed;
   const cleaned = withComma.replace(/[^\d,]/g, "");

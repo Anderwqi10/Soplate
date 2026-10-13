@@ -40,3 +40,15 @@ test("editing in the middle keeps the cursor next to the typed digit", async () 
   expect(input).toHaveValue("$ 15.000");
   expect(input.selectionStart).toBe(4); // "$ 15|.000"
 });
+
+test("a dot typed key by key after a grouped thousand is the decimal separator", async () => {
+  render(<Field />);
+  await userEvent.type(screen.getByLabelText("Monto"), "1500.50");
+  expect(screen.getByLabelText("Monto")).toHaveValue("$ 1.500,50");
+});
+
+test("thousands dots typed by hand are still accepted", async () => {
+  render(<Field />);
+  await userEvent.type(screen.getByLabelText("Monto"), "1.000");
+  expect(screen.getByLabelText("Monto")).toHaveValue("$ 1.000");
+});
