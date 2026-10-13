@@ -26,3 +26,17 @@ def test_missing_build_explains_what_to_do(client, tmp_path, settings):
     response = client.get("/")
     assert response.status_code == 503
     assert response.content.decode() == "Falta compilar la app: ejecuta scripts\publicar.ps1"
+
+
+def test_manifest_is_served_with_manifest_mime_type(built_frontend, settings):
+    from django.http import HttpResponse
+    from django.test import RequestFactory
+    from whitenoise.middleware import WhiteNoiseMiddleware
+
+    (built_frontend / "manifest.webmanifest").write_text("{}", encoding="utf-8")
+    settings.WHITENOISE_ROOT = built_frontend
+    # WhiteNoise indexa los archivos al crearse, así que se construye después de ajustar settings.
+    middleware = WhiteNoiseMiddleware(lambda request: HttpResponse(status=404))
+    response = middleware(RequestFactory().get("/manifest.webmanifest"))
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("application/manifest+json")

@@ -151,6 +151,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # para el admin (collectstatic)
 FRONTEND_DIST = Path(os.environ.get('FRONTEND_DIST_DIR', BASE_DIR.parent.parent / 'frontend' / 'app' / 'dist'))
 WHITENOISE_ROOT = FRONTEND_DIST
 WHITENOISE_MAX_AGE = 0  # index.html y demás: siempre revalidar
+WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}  # algunos navegadores ignoran un manifest con otro tipo
 
 
 def _is_hashed_asset(path, url):
