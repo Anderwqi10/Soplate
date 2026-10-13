@@ -55,7 +55,7 @@ function backupReminder(lastUsb: string | null): string | null {
   if (lastUsb === null) return "Aún no hay copias en el USB.";
   const days = daysSince(lastUsb);
   if (Number.isNaN(days)) return "Aún no hay copias en el USB.";
-  if (days <=BACKUP_REMINDER_DAYS) return null;
+  if (days <= BACKUP_REMINDER_DAYS) return null;
   return `Tu última copia en el USB fue hace ${days} días. Conéctalo e inicia Soplate para guardar una copia.`;
 }
 
