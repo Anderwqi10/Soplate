@@ -13,9 +13,10 @@ export function normalizeAmount(raw: string): string | null {
     const parts = s.split(",");
     if (parts.length !== 2) return null;
     const [whole, cents] = parts;
-    if (!/^\d{1,2}$/.test(cents)) return null;
-    if (/^\d+$/.test(whole)) return `${whole}.${cents}`;
-    if (THOUSANDS.test(whole)) return `${whole.replace(/\./g, "")}.${cents}`;
+    if (!/^\d{0,2}$/.test(cents)) return null; // "1.000," (coma recién escrita) vale 1000
+    const join = cents ? `.${cents}` : "";
+    if (/^\d+$/.test(whole)) return `${whole}${join}`;
+    if (THOUSANDS.test(whole)) return `${whole.replace(/\./g, "")}${join}`;
     return null;
   }
 
@@ -29,8 +30,17 @@ export function normalizeAmount(raw: string): string | null {
  * Texto que se muestra en un campo de dinero mientras se escribe: "$ 1.000.000,5".
  * Solo se conservan cifras y una coma (centavos, máximo 2); los puntos de miles se ponen solos.
  */
-export function formatAmountInput(typed: string): string {
-  const cleaned = typed.replace(/[^\d,]/g, "");
+export function formatAmountInput(typed: string, previous?: string): string {
+  // Un punto seguido de 0-2 cifras al final es el separador decimal (teclado del celular); los
+  // puntos de miles (grupos de 3) se ignoran y se vuelven a poner solos. `previous` (lo que se
+  // veía antes de la tecla) evita confundir: al borrar ("$ 10.00" viene de "$ 10.000") o al
+  // escribir un punto suelto tras 1-3 cifras ("1" y luego "." de "1.000") el punto es de miles.
+  const isDeletion = previous !== undefined && typed.length < previous.length;
+  const isLoneDotAfterFewDigits =
+    previous !== undefined && /(^|\D)\d{1,3}\.$/.test(typed.replace(/^\$\s*/, ""));
+  const dotIsDecimal = !typed.includes(",") && !isDeletion && !isLoneDotAfterFewDigits;
+  const withComma = dotIsDecimal ? typed.replace(/\.(\d{0,2})$/, ",$1") : typed;
+  const cleaned = withComma.replace(/[^\d,]/g, "");
   if (!cleaned) return "";
   const commaAt = cleaned.indexOf(",");
   const rawWhole = commaAt === -1 ? cleaned : cleaned.slice(0, commaAt);

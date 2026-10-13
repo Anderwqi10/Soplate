@@ -46,8 +46,10 @@ export default function MoneyInput({ value, onChange, className = "", ...rest }:
         const caret = e.target.selectionStart ?? typed.length;
         // Contar cifras antes del cursor: los puntos cambian de sitio, las cifras no.
         const digitsBefore = [...typed.slice(0, caret)].filter(isSignificant).length;
-        const formatted = formatAmountInput(typed);
-        pendingCaret.current = positionAfter(formatted, digitsBefore);
+        const formatted = formatAmountInput(typed, value);
+        // Al final del texto el cursor se queda al final (un "." pasa a ser coma y no se cuenta).
+        pendingCaret.current =
+          caret >= typed.length ? formatted.length : positionAfter(formatted, digitsBefore);
         onChange(formatted);
       }}
     />

@@ -13,6 +13,10 @@ test("keeps plain and dot-decimal numbers", () => {
   expect(normalizeAmount(" 400000.00 ")).toBe("400000.00");
 });
 
+test("a trailing comma is ignored", () => {
+  expect(normalizeAmount("$ 1.000,")).toBe("1000");
+});
+
 test("rejects what is not an amount", () => {
   expect(normalizeAmount("")).toBeNull();
   expect(normalizeAmount("abc")).toBeNull();
@@ -36,13 +40,24 @@ describe("formatAmountInput (lo que se ve mientras se escribe)", () => {
     ["abc12", "$ 12"], // letras ignoradas
     ["$ ", ""], // se borró todo
     ["", ""],
+    ["1500.50", "$ 1.500,50"], // punto decimal (teclado del celular)
+    ["20.5", "$ 20,5"],
+    ["1500.", "$ 1.500,"],
+    ["$ 1.000.000", "$ 1.000.000"], // puntos de miles se conservan
   ])("%j se muestra como %j", (typed, shown) => {
     expect(formatAmountInput(typed)).toBe(shown);
+  });
+
+  test("with the previous text, deleting or a lone dot after few digits keep dots as thousands", () => {
+    expect(formatAmountInput("$ 10.00", "$ 10.000")).toBe("$ 1.000");
+    expect(formatAmountInput("$ 1.", "$ 1")).toBe("$ 1");
+    expect(formatAmountInput("$ 1500.", "$ 1500")).toBe("$ 1.500,");
   });
 
   test("the displayed text converts back to what the API expects", () => {
     expect(normalizeAmount(formatAmountInput("1000000,5"))).toBe("1000000.5");
     expect(normalizeAmount(formatAmountInput("250000"))).toBe("250000");
+    expect(normalizeAmount(formatAmountInput("1500.50"))).toBe("1500.50");
   });
 });
 
