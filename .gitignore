@@ -14,3 +14,5 @@ dist/
 .env
 .claude/settings.local.json
 .superpowers/
+backups/
+scripts/.soplate.pid

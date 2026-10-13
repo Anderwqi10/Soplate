@@ -14,23 +14,33 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+from .env import env_list, secret_key
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Secretos y conexión a la base: backend/app/.env (no versionado).
+# Las variables ya definidas en el entorno tienen prioridad sobre el archivo.
+load_dotenv(BASE_DIR / ".env", override=False)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-rn-^^+$*c7#2_g6ki6gq-qo@jd@7)jxp*_gf_-o-a3sshwvcn5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # En producción se define DJANGO_DEBUG=false; en tu computador queda activo.
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = secret_key(DEBUG, os.environ.get("DJANGO_SECRET_KEY"))
+
 # Desarrollo: se acepta cualquier equipo (para probar desde el celular por WiFi).
 # Producción: solo los dominios de DJANGO_ALLOWED_HOSTS, separados por coma.
-ALLOWED_HOSTS = ["*"] if DEBUG else [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h]
+ALLOWED_HOSTS = ["*"] if DEBUG else env_list("DJANGO_ALLOWED_HOSTS")
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 
 # Application definition
@@ -88,9 +98,13 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DATABASE_NAME", "soplate_dev"),
+        "USER": os.environ.get("DATABASE_USER", "soplate"),
+        "PASSWORD": os.environ.get("DATABASE_PASSWORD", ""),
+        "HOST": os.environ.get("DATABASE_HOST", "localhost"),
+        "PORT": os.environ.get("DATABASE_PORT", "5432"),
     }
 }
 
@@ -150,7 +164,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
 # Orígenes desde los que el frontend puede llamar a la API.
@@ -159,4 +173,4 @@ SIMPLE_JWT = {
 if DEBUG:
     CORS_ALLOWED_ORIGIN_REGEXES = [r"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$"]
 else:
-    CORS_ALLOWED_ORIGINS = [o for o in os.environ.get("DJANGO_CORS_ORIGINS", "").split(",") if o]
+    CORS_ALLOWED_ORIGINS = env_list("DJANGO_CORS_ORIGINS")
