@@ -18,3 +18,5 @@ backups/
 scripts/.soplate.pid
 
 backend/app/staticfiles/
+scripts/soplate.log
+scripts/soplate.err.log
