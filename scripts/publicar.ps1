@@ -9,11 +9,14 @@ $frontend = Join-Path $raiz "frontend\app"
 
 # Si Soplate está iniciado, hay que detenerlo: solo ve la compilación nueva al arrancar.
 $estabaIniciado = $false
-if (Test-Path $pidFile) {
-    $pidGuardado = (Get-Content $pidFile -ErrorAction SilentlyContinue | Select-Object -First 1)
-    if ($pidGuardado -and (Get-Process -Id ([int]$pidGuardado) -ErrorAction SilentlyContinue)) {
-        $estabaIniciado = $true
-        & (Join-Path $PSScriptRoot "detener.ps1")
+. (Join-Path $PSScriptRoot "soplate-comun.ps1")
+if (Get-SoplatePid) {
+    $estabaIniciado = $true
+    & (Join-Path $PSScriptRoot "detener.ps1")
+    Write-Host "Soplate estaba iniciado: lo detuve. Vuelve a iniciarlo con 'Iniciar Soplate'."
+    if (Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue) {
+        Write-Host "El puerto 8000 sigue ocupado. Cierra el programa que lo usa y vuelve a ejecutar publicar.ps1."
+        exit 1
     }
 }
 
@@ -52,6 +55,3 @@ finally {
 }
 
 Write-Host "Listo: la app está publicada."
-if ($estabaIniciado) {
-    Write-Host "Soplate estaba iniciado: lo detuve. Vuelve a iniciarlo con 'Iniciar Soplate'."
-}

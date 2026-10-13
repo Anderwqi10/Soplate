@@ -9,11 +9,13 @@ function Terminar($codigo) {
     exit $codigo
 }
 
-if (-not (Test-Path $pidFile)) {
-    Write-Host "Soplate no está iniciado (no hay PID guardado)."
+. (Join-Path $PSScriptRoot "soplate-comun.ps1")
+# Solo se detiene un proceso confirmado como Soplate; si no, se limpia el PID viejo.
+$pidGuardado = Get-SoplatePid
+if (-not $pidGuardado) {
+    Write-Host "Soplate no está iniciado (no hay un proceso de Soplate en el puerto 8000)."
     Terminar 0
 }
-$pidGuardado = [int](Get-Content $pidFile | Select-Object -First 1)
 
 # Detener el proceso y, si lo lanzó un proceso de waitress, también ese proceso padre.
 $proc = Get-CimInstance Win32_Process -Filter "ProcessId = $pidGuardado" -ErrorAction SilentlyContinue

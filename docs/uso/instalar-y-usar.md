@@ -66,7 +66,7 @@ Esto crea la dirección `https://<tu-pc>.<tailnet>.ts.net` que lleva a Soplate. 
 
 ## 6. Decirle a Soplate cuál es su dirección
 
-Abre `backend\app\.env` con el Bloc de notas y agrega estas dos líneas (usa tu dirección real):
+Abre `backend\app\.env` con el Bloc de notas y agrega o reemplaza estas dos líneas (si ya existen, edítalas; no las repitas) con tu dirección real:
 
 ```
 DJANGO_ALLOWED_HOSTS=mi-pc.tu-red.ts.net,127.0.0.1,localhost

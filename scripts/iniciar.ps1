@@ -16,13 +16,11 @@ function Terminar($codigo) {
     exit $codigo
 }
 
-if (Test-Path $pidFile) {
-    $pidGuardado = (Get-Content $pidFile -ErrorAction SilentlyContinue | Select-Object -First 1)
-    if ($pidGuardado -and (Get-Process -Id ([int]$pidGuardado) -ErrorAction SilentlyContinue)) {
-        Write-Host "Soplate ya está iniciado (PID $pidGuardado). Para reiniciarlo usa 'Detener Soplate' primero."
-        Terminar 1
-    }
-    Remove-Item $pidFile -ErrorAction SilentlyContinue
+. (Join-Path $PSScriptRoot "soplate-comun.ps1")
+$pidVivo = Get-SoplatePid
+if ($pidVivo) {
+    Write-Host "Soplate ya está iniciado (PID $pidVivo). Para reiniciarlo usa 'Detener Soplate' primero."
+    Terminar 1
 }
 if (-not (Test-Path (Join-Path $raiz "frontend\app\dist\index.html"))) {
     Write-Host "Falta compilar la app: ejecuta scripts\publicar.ps1"
