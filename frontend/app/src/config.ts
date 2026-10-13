@@ -1,11 +1,12 @@
 // Único lugar donde se configuran la API, el idioma y la moneda.
 
 /**
- * Sin VITE_API_URL, la API se busca en el mismo equipo desde el que se abrió la app (puerto 8000).
- * Así funciona igual en el computador (localhost) y en el celular por WiFi (IP del computador).
+ * Sin VITE_API_URL: con el servidor de desarrollo de Vite (puerto 5173) la API está en el puerto 8000
+ * del mismo equipo; servida por Django (app compilada), la API está en el mismo origen.
  */
-export function apiUrlFor(location: Pick<Location, "protocol" | "hostname">): string {
-  return `${location.protocol}//${location.hostname}:8000/api`;
+export function apiUrlFor(location: Pick<Location, "protocol" | "hostname" | "port" | "origin">): string {
+  if (location.port === "5173") return `${location.protocol}//${location.hostname}:8000/api`;
+  return `${location.origin}/api`;
 }
 
 export const API_URL: string = import.meta.env.VITE_API_URL ?? apiUrlFor(window.location);

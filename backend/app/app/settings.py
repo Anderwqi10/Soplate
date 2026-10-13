@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -144,6 +145,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # para el admin (collectstatic)
+
+# La app compilada (Vite) se sirve desde Django en una sola dirección.
+FRONTEND_DIST = Path(os.environ.get('FRONTEND_DIST_DIR', BASE_DIR.parent.parent / 'frontend' / 'app' / 'dist'))
+WHITENOISE_ROOT = FRONTEND_DIST
+WHITENOISE_MAX_AGE = 0  # index.html y demás: siempre revalidar
+
+
+def _is_hashed_asset(path, url):
+    # Los archivos de /assets/ llevan hash en el nombre: caché de un año.
+    return url.startswith('/assets/')
+
+
+WHITENOISE_IMMUTABLE_FILE_TEST = _is_hashed_asset
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -16,3 +16,5 @@ dist/
 .superpowers/
 backups/
 scripts/.soplate.pid
+
+backend/app/staticfiles/

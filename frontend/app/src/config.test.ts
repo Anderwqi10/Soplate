@@ -1,7 +1,13 @@
 import { apiUrlFor } from "./config";
 
-test("the API is looked up on the same machine the app was opened from", () => {
-  // Desde el celular la app se abre con la IP del computador; "localhost" sería el propio celular.
-  expect(apiUrlFor({ protocol: "http:", hostname: "192.168.1.9" })).toBe("http://192.168.1.9:8000/api");
-  expect(apiUrlFor({ protocol: "http:", hostname: "localhost" })).toBe("http://localhost:8000/api");
+test("served by Django, the API lives on the same origin", () => {
+  expect(
+    apiUrlFor({ protocol: "https:", hostname: "pc.tail.ts.net", port: "", origin: "https://pc.tail.ts.net" }),
+  ).toBe("https://pc.tail.ts.net/api");
+});
+
+test("on the Vite dev server (5173) the API is on port 8000 of the same host", () => {
+  expect(
+    apiUrlFor({ protocol: "http:", hostname: "localhost", port: "5173", origin: "http://localhost:5173" }),
+  ).toBe("http://localhost:8000/api");
 });
