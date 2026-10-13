@@ -79,13 +79,15 @@ function daysAgo(days: number): string {
 test("reminds you when there are no USB backups yet", async () => {
   vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: null }));
   renderWithProviders(<DashboardPage />);
-  expect(await screen.findByRole("status")).toHaveTextContent("Aún no hay copias en el USB.");
+  expect(await screen.findByRole("status")).toHaveTextContent(/^Aún no hay copias en el USB\.$/);
 });
 
 test("reminds you when the last USB backup is 9 days old", async () => {
   vi.mocked(client.apiFetch).mockResolvedValue(dashboard({ last_usb_backup_at: daysAgo(9) }));
   renderWithProviders(<DashboardPage />);
-  expect(await screen.findByRole("status")).toHaveTextContent("Tu última copia en el USB fue hace 9 días.");
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    /^Tu última copia en el USB fue hace 9 días\. Conéctalo e inicia Soplate para guardar una copia\.$/,
+  );
 });
 
 test("no reminder when the last USB backup is 2 days old", async () => {

@@ -19,7 +19,7 @@ class Command(BaseCommand):
         try:
             result = run_backup(local_dir=Path(local), usb_dir=Path(usb) if usb else None,
                                 now=datetime.now(), dump=pg_dump_to)
-        except (BackupError, OSError) as exc:
+        except Exception as exc:  # noqa: BLE001 - la app debe arrancar pase lo que pase
             self.stderr.write(f"Copia no hecha: {exc}")
             return
         self.stdout.write(f"Copia local: {result.local_path}")

@@ -73,3 +73,14 @@ def test_backup_command_never_blocks_start(tmp_path, monkeypatch):
     with mock.patch("core.management.commands.backup_db.pg_dump_to", side_effect=BackupError("sin pg_dump")):
         call_command("backup_db", stdout=out, stderr=err)
     assert "sin pg_dump" in err.getvalue()
+
+
+def test_backup_command_survives_database_error(tmp_path, monkeypatch):
+    from django.db import DatabaseError
+
+    monkeypatch.setenv("BACKUP_DIR", str(tmp_path))
+    monkeypatch.delenv("BACKUP_USB_DIR", raising=False)
+    err = StringIO()
+    with mock.patch("core.management.commands.backup_db.pg_dump_to", side_effect=lambda p: p.write_bytes(b"x")),             mock.patch.object(BackupRecord.objects, "create", side_effect=DatabaseError("sin tabla")):
+        call_command("backup_db", stdout=StringIO(), stderr=err)
+    assert "Copia no hecha" in err.getvalue()

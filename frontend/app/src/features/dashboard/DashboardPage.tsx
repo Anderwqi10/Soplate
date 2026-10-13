@@ -49,14 +49,13 @@ function DueList({ rows, empty, overdue = false }: { rows: (DueRow & { days_over
 }
 
 const BACKUP_REMINDER_DAYS = 7;
-const BACKUP_TIP = "Conecta el USB y reinicia Soplate para hacer una copia.";
 
 /** Aviso de copia de seguridad: solo aparece si nunca hubo copia en el USB o ya pasó más de una semana. */
 function backupReminder(lastUsb: string | null): string | null {
-  if (lastUsb === null) return `Aún no hay copias en el USB. ${BACKUP_TIP}`;
+  if (lastUsb === null) return "Aún no hay copias en el USB.";
   const days = daysSince(lastUsb);
   if (days <= BACKUP_REMINDER_DAYS) return null;
-  return `Tu última copia en el USB fue hace ${days} días. ${BACKUP_TIP}`;
+  return `Tu última copia en el USB fue hace ${days} días. Conéctalo e inicia Soplate para guardar una copia.`;
 }
 
 export default function DashboardPage() {
