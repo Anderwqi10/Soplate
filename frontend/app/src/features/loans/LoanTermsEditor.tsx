@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { LoanDetail, LoanPreview } from "../../api/types";
 import ConfirmBox from "../../components/ConfirmBox";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -18,6 +18,12 @@ export default function LoanTermsEditor({ loan }: { loan: LoanDetail }) {
   const [problem, setProblem] = useState<string | null>(null);
   const [after, setAfter] = useState<LoanPreview | null>(null);
   const [changes, setChanges] = useState<{ interest_rate?: string; start_date?: string }>({});
+
+  // Si las condiciones cambian (se guardaron y la ficha se recargó), el formulario muestra las nuevas.
+  useEffect(() => {
+    setRate(String(Number(loan.interest_rate)));
+    setStart(loan.start_date);
+  }, [loan.interest_rate, loan.start_date]);
 
   function reset() {
     setEditing(false);

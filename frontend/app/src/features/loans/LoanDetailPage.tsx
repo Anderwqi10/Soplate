@@ -177,7 +177,7 @@ export default function LoanDetailPage() {
             )}
           </section>
 
-          <LoanTermsEditor key={`${loan.id}-${loan.interest_rate}-${loan.start_date}`} loan={loan} />
+          <LoanTermsEditor key={loan.id} loan={loan} />
 
           <NotesEditor key={loan.id} loan={loan} />
 

@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 import * as client from "../../api/client";
@@ -116,4 +116,34 @@ test("if the loan's account was archived, the payment form makes you choose anot
     method: "POST",
     body: { amount: "400000", date: todayISO(), account: 1, note: "" },
   });
+});
+
+test("after saving new terms the success message and the new values stay on the page", async () => {
+  let current = detail();
+  vi.mocked(client.apiFetch).mockImplementation(async (path: string, options?: { method?: string }) => {
+    if (path === "/loans/7/") return current;
+    if (path === "/accounts/") return accounts;
+    if (path === "/loans/preview/") {
+      return { installment_amount: "416666.67", total_amount: "1250000.00", end_date: "2026-04-30", interest_total: "250000.00", installments: [] };
+    }
+    if (path === "/loans/7/terms/" && options?.method === "PATCH") {
+      current = detail({ interest_rate: "25.00" });
+      return current;
+    }
+    throw new Error(`ruta inesperada ${path}`);
+  });
+  renderDetail();
+  await userEvent.click(await screen.findByRole("button", { name: "Editar condiciones" }));
+  const rate = screen.getByLabelText("Tasa de interés (%)");
+  await userEvent.clear(rate);
+  await userEvent.type(rate, "25");
+  await userEvent.click(screen.getByRole("button", { name: "Revisar cambios" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Sí, cambiar condiciones" }));
+  expect(await screen.findByText("Condiciones actualizadas.")).toBeInTheDocument();
+  // Esperar a que la ficha se recargue con la tasa nueva; el mensaje no debe desaparecer.
+  await waitFor(() => expect(screen.getByText(/25 %/)).toBeInTheDocument());
+  await new Promise((r) => setTimeout(r, 50));
+  expect(screen.getByText("Condiciones actualizadas.")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Editar condiciones" }));
+  expect(screen.getByLabelText("Tasa de interés (%)")).toHaveValue("25");
 });
